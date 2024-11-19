@@ -127,7 +127,7 @@ class UniversityRecommender:
         search_query = f"{formattedname}+4k+building+picture"
         imageapikey = os.getenv('IMAGE_API_KEY')
         print(search_query)
-        coolquery = f"https://www.googleapis.com/customsearch/v1?key=AIzaSyDptyzxGJg-aR5IldozvISzjNgF2_TISJo&cx=e1cac863f07bf4f8b&q={search_query}&searchType=image"
+        coolquery = f"https://www.googleapis.com/customsearch/v1?key={imageapikey}&q={search_query}&searchType=image"
         imageresponse = requests.get(coolquery).json()
         self.logger.warning(imageresponse.get('items')[0].get('link'))
         return imageresponse.get('items')[0].get('link') #"https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/813.png"
