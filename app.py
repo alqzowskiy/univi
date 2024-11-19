@@ -124,10 +124,10 @@ class UniversityRecommender:
                 formattedcountry += '+'
             else:
                 formattedcountry += i
-        search_query = f"{formattedname}+4k+building+picture"
+        search_query = f"{formattedname}+4k"
         imageapikey = os.getenv('IMAGE_API_KEY')
         print(search_query)
-        coolquery = f"https://www.googleapis.com/customsearch/v1?key={imageapikey}&q={search_query}&searchType=image"
+        coolquery = f"https://www.googleapis.com/customsearch/v1?key=AIzaSyDptyzxGJg-aR5IldozvISzjNgF2_TISJo&cx=e1cac863f07bf4f8b&q={search_query}&searchType=image"
         imageresponse = requests.get(coolquery).json()
         self.logger.warning(imageresponse.get('items')[0].get('link'))
         return imageresponse.get('items')[0].get('link') #"https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/813.png"
@@ -359,98 +359,105 @@ class UniversityRecommender:
             }
 
     def recommend(self, country: str, faculty: str = None, gpa: str = None,
-                 budget: str = None, sat: str = None, extra: str = None) -> Union[List[Dict], Dict[str, str]]:
-        """Generate university recommendations"""
-        if not country:
-            return {"error": "Country is required"}
-
-        try:
-            prompt = f"""
-            Please recommend exactly 6 universities in {country} that match these criteria.
-            Return the response in this exact JSON array format:
-            [
-                {{
-                    "universityName": "University Name",
-                    "location": "City, {country}",
-                    "tuition": "Amount per year",
-                    "acceptanceRate": "XX%",
-                    "GPA": "X.XX",
-                    "facultyStrengths": "List of strong programs"
-                }}
-            ]
-            """
-
-            if faculty:
-                prompt += f"\nField of study: {faculty}"
-            if gpa:
-                prompt += f"\nStudent GPA: {gpa}"
-            if sat:
-                prompt += f"\nSAT score: {sat}"
-            if budget:
-                prompt += f"\nBudget: {budget}"
-            if extra:
-                prompt += f"\nAdditional requirements: {extra}"
-
-            prompt += "\nPlease ensure the response is ONLY the JSON array with exactly 6 universities."
-
-            response = self.model.generate_content(prompt)
-            if not response or not response.text:
-                return {"error": "No response received from AI model"}
-
-            cleaned_text = response.text.strip()
-            if cleaned_text.startswith("```json"):
-                cleaned_text = cleaned_text[7:]
-            if cleaned_text.endswith("```"):
-                cleaned_text = cleaned_text[:-3]
-            cleaned_text = cleaned_text.strip()
+                        budget: str = None, sat: str = None, extra: str = None) -> Union[List[Dict], Dict[str, str]]:
+            """Generate university recommendations"""
+            if not country:
+                return {"error": "Country is required"}
 
             try:
-                recommendations = json.loads(cleaned_text)
-                
-                # Validate response structure
-                if not isinstance(recommendations, list):
-                    return {"error": "Invalid response format - expected a list"}
+                prompt = f"""
+                Please recommend exactly 6 universities in {country} that match these criteria.
+                Return the response in this exact JSON array format:
+                [
+                    {{
+                        "universityName": "University Name",
+                        "location": "City, {country}",
+                        "tuition": "Amount per year",
+                        "acceptanceRate": "XX%",
+                        "GPA": "X.XX",
+                        "facultyStrengths": "List of strong programs"
+                    }}
+                ]
+                """
+
+                if faculty:
+                    prompt += f"\nField of study: {faculty}"
+                if gpa:
+                    prompt += f"\nStudent GPA: {gpa}"
+                if sat:
+                    prompt += f"\nSAT score: {sat}"
+                if budget:
+                    prompt += f"\nBudget: {budget}"
+                if extra:
+                    prompt += f"\nAdditional requirements: {extra}"
+
+                prompt += "\nPlease ensure the response is ONLY the JSON array with exactly 6 universities."
+
+                response = self.model.generate_content(prompt)
+                if not response or not response.text:
+                    return {"error": "No response received from AI model"}
+
+                cleaned_text = response.text.strip()
+                if cleaned_text.startswith("```json"):
+                    cleaned_text = cleaned_text[7:]
+                if cleaned_text.endswith("```"):
+                    cleaned_text = cleaned_text[:-3]
+                cleaned_text = cleaned_text.strip()
+
+                try:
+                    recommendations = json.loads(cleaned_text)
                     
-                if len(recommendations) != 6:
-                    return {"error": f"Expected 6 universities, got {len(recommendations)}"}
+                    # Validate response structure
+                    if not isinstance(recommendations, list):
+                        return {"error": "Invalid response format - expected a list"}
+                        
+                    if len(recommendations) != 6:
+                        return {"error": f"Expected 6 universities, got {len(recommendations)}"}
 
-                # Process each university
-                for uni in recommendations:
-                    # Validate required fields
-                    required_fields = ["universityName", "location", "tuition", "acceptanceRate", "GPA", "facultyStrengths"]
-                    if not all(key in uni for key in required_fields):
-                        return {"error": "Invalid university data structure - missing required fields"}
+                    # Process each university
+                    processed_recommendations = []
+                    for uni in recommendations:
+                        # Validate required fields
+                        required_fields = ["universityName", "location", "tuition", "acceptanceRate", "GPA", "facultyStrengths"]
+                        if not all(key in uni for key in required_fields):
+                            continue
 
-                    # Process faculty strengths
-                    if isinstance(uni.get('facultyStrengths'), list):
-                        uni['facultyStrengths'] = ', '.join(str(f).strip("'[]") for f in uni['facultyStrengths'])
-                    elif isinstance(uni.get('facultyStrengths'), str):
-                        uni['facultyStrengths'] = uni['facultyStrengths'].strip("'[]")
+                        # Process faculty strengths
+                        if isinstance(uni.get('facultyStrengths'), list):
+                            uni['facultyStrengths'] = ', '.join(str(f).strip("'[]") for f in uni['facultyStrengths'])
+                        elif isinstance(uni.get('facultyStrengths'), str):
+                            uni['facultyStrengths'] = uni['facultyStrengths'].strip("'[]")
 
-                    # Add image URL and label
-                    try:
-                        university_name = uni.get('universityName', '')
-                        uni['imageUrl'] = self._get_university_image(university_name, country)
-                        uni['label'] = self._generate_university_label(university_name, uni['facultyStrengths'])
-                    except Exception as e:
-                        self.logger.error(f"Error getting image/label for {university_name}: {str(e)}")
-                        uni['imageUrl'] = "default_university_image_url.jpg"  # Fallback image URL
-                        uni['label'] = {
-                            "text": "Featured University",
-                            "color_class": "bg-[#9333EA]",
-                            "prefix": "✨"
-                        }
+                        # Add image URL and label
+                        try:
+                            university_name = uni.get('universityName', '')
+                            uni['imageUrl'] = self._get_university_image(university_name, country)
+                            uni['label'] = self._generate_university_label(university_name, uni['facultyStrengths'])
+                            processed_recommendations.append(uni)
+                        except Exception as e:
+                            self.logger.error(f"Error getting image/label for {university_name}: {str(e)}")
+                            uni['imageUrl'] = "default_university_image_url.jpg"
+                            uni['label'] = [{
+                                "text": "Featured University",
+                                "details": "Notable academic institution",
+                                "field": "Overall",
+                                "color_class": "bg-purple-600",
+                                "prefix": "✨"
+                            }]
+                            processed_recommendations.append(uni)
 
-                return recommendations
+                    if not processed_recommendations:
+                        return {"error": "Failed to process any university recommendations"}
 
-            except json.JSONDecodeError as e:
-                self.logger.error(f"JSON parsing error: {str(e)}\nText attempted to parse: {cleaned_text}")
-                return {"error": "Failed to parse AI response as JSON"}
+                    return processed_recommendations
 
-        except Exception as e:
-            self.logger.error(f"Error generating recommendations: {str(e)}")
-            return {"error": f"Error generating recommendations: {str(e)}"}
+                except json.JSONDecodeError as e:
+                    self.logger.error(f"JSON parsing error: {str(e)}\nText attempted to parse: {cleaned_text}")
+                    return {"error": "Failed to parse AI response as JSON"}
 
+            except Exception as e:
+                self.logger.error(f"Error generating recommendations: {str(e)}")
+                return {"error": f"Error generating recommendations: {str(e)}"}
     def get_career_guidance(self, question_count: int, previous_prompt: str = "") -> tuple:
         """Generate AI-driven career guidance questions and process responses"""
         try:
