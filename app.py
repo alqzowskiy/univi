@@ -109,22 +109,22 @@ class UniversityRecommender:
         self.model = genai.GenerativeModel('gemini-pro')
         self.logger = logging.getLogger(__name__)
 
-    def _get_university_image(self, university_name: str, country: str) -> str:
-        """Generate image URL for a university"""
-        formattedname = ""
-        formattedcountry = ""
-        for i in university_name:
-            if i == ' ' or i == '+':
-                formattedname += '+'
-            else:
-                formattedname += i
+    # def _get_university_image(self, university_name: str, country: str) -> str:
+    #     """Generate image URL for a university"""
+    #     formattedname = ""
+    #     formattedcountry = ""
+    #     for i in university_name:
+    #         if i == ' ' or i == '+':
+    #             formattedname += '+'
+    #         else:
+    #             formattedname += i
             
         for i in country:
             if i == ' ' or i == '+':
                 formattedcountry += '+'
             else:
                 formattedcountry += i
-        search_query = f"{formattedname}+4k"
+        search_query = f"{formattedname}+4k+building+picture"
         imageapikey = os.getenv('IMAGE_API_KEY')
         print(search_query)
         coolquery = f"https://www.googleapis.com/customsearch/v1?key=AIzaSyDptyzxGJg-aR5IldozvISzjNgF2_TISJo&cx=e1cac863f07bf4f8b&q={search_query}&searchType=image"
