@@ -109,15 +109,15 @@ class UniversityRecommender:
         self.model = genai.GenerativeModel('gemini-pro')
         self.logger = logging.getLogger(__name__)
 
-    # def _get_university_image(self, university_name: str, country: str) -> str:
-    #     """Generate image URL for a university"""
-    #     formattedname = ""
-    #     formattedcountry = ""
-    #     for i in university_name:
-    #         if i == ' ' or i == '+':
-    #             formattedname += '+'
-    #         else:
-    #             formattedname += i
+    def _get_university_image(self, university_name: str, country: str) -> str:
+        """Generate image URL for a university"""
+        formattedname = ""
+        formattedcountry = ""
+        for i in university_name:
+            if i == ' ' or i == '+':
+                formattedname += '+'
+            else:
+                formattedname += i
             
         for i in country:
             if i == ' ' or i == '+':
