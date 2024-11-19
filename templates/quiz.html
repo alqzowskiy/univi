@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+ign
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Guidance Quiz</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(1rem);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+
+        .nav-link {
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #3b82f6;
+            transition: width 0.2s ease-in-out;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-3">
+                        <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 14l9-5-9-5-9 5 9 5z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14v7" />
+                        </svg>
+                        <span
+                            class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">UniVi</span>
+                    </a>
+                </div>
+                <div class="flex items-center space-x-8">
+                    <a href="/unichooser" class="nav-link text-gray-600 hover:text-blue-600 font-medium">Find
+                        Universities</a>
+                    <a href="/advisor" class="nav-link text-gray-600 hover:text-blue-600 font-medium">AI Advisor</a>
+                    <a href="/loadquiz" class="nav-link text-blue-600 hover:text-blue-600 font-medium">Career Quiz</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto p-6 mt-20">
+        <!-- Progress Bar -->
+        <div class="mb-8">
+            <div class="h-2 bg-gray-200 rounded-full">
+                <div class="h-2 bg-blue-600 rounded-full transition-all duration-500"
+                    style="width: {{ (count / 6) * 100 }}%">
+                </div>
+            </div>
+            <p class="text-center mt-2 text-sm text-gray-600">Question {{ count }} of 6</p>
+        </div>
+
+        <div class="fade-in">
+            <!-- Question Container -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                {% if error %}
+                <div class="bg-red-50 p-6">
+                    <div class="text-red-600 text-center">
+                        <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <h2 class="text-xl font-bold mb-2">{{ error }}</h2>
+                        <p class="text-sm">Please try again or start over.</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="bg-gradient-to-r from-blue-600 to-blue-500 p-6">
+                    <h1 class="text-2xl font-bold text-white mb-2">{{ question }}</h1>
+                    {% if description %}
+                    <p class="text-blue-100">{{ description }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Answer Form -->
+                <form method="post" class="p-6" id="quizForm">
+                    <input type="hidden" name="hid" value="{{ count }}">
+                    <input type="hidden" name="hidprompt" value="{{ newprompt }}">
+
+                    <div class="space-y-4">
+                        <label for="answer" class="block text-gray-700 font-medium">Your Answer:</label>
+                        <textarea id="answer" name="answer"
+                            class="w-full h-32 p-4 border rounded-lg transition-all focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                            placeholder="Share your thoughts here..." required></textarea>
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button type="submit"
+                            class="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium transition-all hover:bg-blue-700 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                            {% if count >= 5 %}Finish Quiz{% else %}Next Question{% endif %}
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+
+                <!-- Tips Section -->
+                <div class="mx-6 mb-6 bg-blue-50 rounded-xl p-6">
+                    <h3 class="text-lg font-semibold text-blue-800 mb-4">💡 Tips for Better Responses:</h3>
+                    <ul class="space-y-3 text-blue-700">
+                        <li class="flex items-center">
+                            <svg class="flex-shrink-0 w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Be specific and detailed in your answers</span>
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="flex-shrink-0 w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Share your genuine interests and experiences</span>
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="flex-shrink-0 w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Consider both your strengths and areas for growth</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Form submission handler
+        document.getElementById('quizForm')?.addEventListener('submit', function (e) {
+            // Disable submit button to prevent double submission
+            const submitButton = this.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.classList.add('opacity-75');
+
+                // Add loading state
+                submitButton.innerHTML = `
+                    <span class="inline-flex items-center">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        Processing...
+                    </span>`;
+            }
+        });
+
+        // Auto-resize textarea as user types
+        const textarea = document.getElementById('answer');
+        if (textarea) {
+            textarea.addEventListener('input', function () {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+        }
+    </script>
+</body>
+
+</html>
