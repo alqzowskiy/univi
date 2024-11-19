@@ -13,6 +13,29 @@
             font-family: 'Inter', sans-serif;
         }
 
+        universitytext {
+            background: linear-gradient(to right,
+                    #ffffff 0%,
+                    #80a5eb 50%,
+                    #6e9aed 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+
+            background-size: 500% auto;
+            animation: textShine 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes textShine {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 100% 50%;
+            }
+        }
+
         .hero-gradient {
             background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
             position: relative;
@@ -155,8 +178,8 @@
                 </div>
                 <h1 class="text-6xl md:text-8xl font-bold mb-8 leading-tight">
                     Find Your Perfect<br />
-                    <span class="bg-gradient-to-r from-blue-200 to-white bg-clip-text text-transparent">University
-                        Match</span>
+                    <universitytext>University
+                        Match</universitytext>
                 </h1>
                 <p class="text-xl md:text-2xl mb-12 text-blue-100 max-w-3xl mx-auto leading-relaxed">
                     Get personalized university recommendations based on your unique profile, interests, and career

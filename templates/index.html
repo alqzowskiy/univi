@@ -7,6 +7,69 @@
     <title>Find Your Perfect University</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <style>
+         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+        /* Enhanced card styling */
+        .university-card {
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .university-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3),
+                0 4px 6px -2px rgba(59, 130, 246, 0.1);
+            transform: translateY(-4px);
+        }
+
+        /* Enhanced stats grid */
+        .university-card .grid div {
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Enhanced faculty tags */
+        .university-card .bg-blue-50 {
+            border: 1px solid #bfdbfe;
+            box-shadow: 0 1px 2px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Enhanced buttons */
+        .university-card button {
+            border: 1px solid transparent;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Enhanced badge container */
+        .badge-container div {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Image container enhancement */
+        .university-card .relative {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        /* Bottom gradient enhancement */
+        .gradient-overlay {
+            background: linear-gradient(180deg,
+                    rgba(0, 0, 0, 0) 0%,
+                    rgba(0, 0, 0, 0.8) 100%);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Stat container enhancements */
+        .bg-gray-50 {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+        }
+
         .chat-modal {
             display: none;
             position: fixed;
