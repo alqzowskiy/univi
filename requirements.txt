@@ -2,3 +2,4 @@ load_dotenv
 google.generativeai
 flask
 requests
+gunicorn
