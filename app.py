@@ -309,20 +309,20 @@ class UniversityRecommender:
 
 
     def recommend(self, country: str, faculty: str = None, gpa: str = None,
-                budget: str = None, sat: str = None, extra: str = None) -> Union[List[Dict], Dict[str, str]]:
+                    budget: str = None, sat: str = None, extra: str = None) -> Union[List[Dict], Dict[str, str]]:
         """Generate accurate university recommendations with specific, verified data"""
         if not country:
             return {"error": "Country is required"}
 
         try:
             prompt = f"""
-            Return EXACTLY 6 universities onlu in {country} with VERIFIED data.
+            Return EXACTLY 6 universities in {country} with VERIFIED data.
             
             You MUST:
             1. Return the response in VALID JSON format
-            2. Only provide real information check it few times
+            2. Only provide real information
             3. Use specific numbers and ranges instead of "Varies"
-            5. Follow this EXACT example format but put info about the University you are writing about:
+            4. Follow this EXACT example format:
 
             [
                 {{
@@ -330,14 +330,12 @@ class UniversityRecommender:
                     "location": "City, {country}",
                     "tuition": {{
                         "amount": "Exact amount in local currency",
-                        "details": "Annual/semester and program info",
-                        
+                        "details": "Annual/semester and program info"
                     }},
                     "admissionStats": {{
                         "acceptanceRate": {{
                             "rate": "Exact percentage or range (e.g. 65-75%)",
-                            "year": "2023",
-                            
+                            "year": "2023"
                         }},
                         "gpaRequirements": {{
                             "minimum": "3.0",
@@ -354,11 +352,6 @@ class UniversityRecommender:
                     ]
                 }}
             ]
-
-            Rules:
-            - Must be valid JSON (no trailing commas, proper quotes)
-            - All numbers must be specific (no "Varies")
-            - Skip universities without verifiable data
             """
 
             if faculty:
@@ -372,31 +365,23 @@ class UniversityRecommender:
             if extra:
                 prompt += f"\nAdditional criteria: {extra}"
 
-            # First attempt to get response
             response = self.model.generate_content(prompt)
             if not response or not response.text:
                 raise ValueError("No response received from model")
 
             # Clean the response text
             cleaned_text = response.text.strip()
-            
-            # Remove any markdown code block syntax
             if cleaned_text.startswith("```json"):
                 cleaned_text = cleaned_text[7:]
             if cleaned_text.endswith("```"):
                 cleaned_text = cleaned_text[:-3]
-
-            # Remove any leading/trailing whitespace or special characters
             cleaned_text = cleaned_text.strip()
 
             try:
-                # Attempt to parse JSON
                 recommendations = json.loads(cleaned_text)
             except json.JSONDecodeError as e:
-                # If first attempt fails, try to extract JSON using regex
                 json_match = re.search(r'\[.*\]', cleaned_text, re.DOTALL)
                 if not json_match:
-                    # If still no valid JSON, try one more time with a more explicit prompt
                     retry_prompt = f"""
                     The previous response was not valid JSON. Please provide exactly 6 universities in {country} 
                     in STRICT JSON format. No explanations, no markdown, ONLY the JSON array.
@@ -411,11 +396,10 @@ class UniversityRecommender:
                 else:
                     recommendations = json.loads(json_match.group())
 
-            # Process and validate each university
             processed_recommendations = []
             for uni in recommendations:
+                # Process each university recommendation
                 try:
-                    # Basic validation of required fields
                     if not all(key in uni for key in ["universityName", "location", "tuition"]):
                         continue
 
@@ -434,7 +418,6 @@ class UniversityRecommender:
                         )
                     }
 
-                    # Add image and label
                     processed_uni["imageUrl"] = self._get_university_image(
                         processed_uni["universityName"], 
                         country
@@ -456,7 +439,7 @@ class UniversityRecommender:
 
         except Exception as e:
             self.logger.error(f"Error in recommend method: {str(e)}")
-            return {"error": f"Error generating recommendations: {str(e)}"}
+            return {"error": f"Error generating recommendations: {str(e)}"}     
 
     def _format_tuition_info(self, tuition_data: Dict) -> str:
         """Format tuition information with specific details"""
@@ -867,6 +850,8 @@ if __name__ == "__main__":
     api_key = os.getenv('GOOGLE_API_KEY')
     if api_key:
         genai.configure(api_key=api_key)
+    if not os.getenv('GOOGLE_API_KEY'):
+        raise ValueError("Missing Google API key")
     
     # Run the application
     app.run(debug=True, port=3000)
