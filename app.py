@@ -124,7 +124,7 @@ class UniversityRecommender:
                 formattedcountry += '+'
             else:
                 formattedcountry += i
-        search_query = f"{formattedname}+4k+building+picture"
+        search_query = f"{formattedname}"
         imageapikey = os.getenv('IMAGE_API_KEY')
         print(search_query)
         coolquery = f"https://www.googleapis.com/customsearch/v1?key=AIzaSyDptyzxGJg-aR5IldozvISzjNgF2_TISJo&cx=e1cac863f07bf4f8b&q={search_query}&searchType=image"
@@ -134,125 +134,74 @@ class UniversityRecommender:
     # def _get_university_image(self, university_name: str, country: str) -> str:   
     #     return "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/813.png"
     def _generate_university_label(self, university_name: str, faculty_strengths: str) -> List[Dict[str, str]]:
-        """Generate single best badge for university achievement"""
+        """Generate badge with only verified rankings and achievements"""
         try:
-            # Generate focused badge using Gemini
             prompt = f"""
-            For {university_name}, with strengths in {faculty_strengths},
-            generate the SINGLE most prestigious ranking or achievement in this JSON format:
+            For {university_name}, provide ONLY 100% VERIFIED and CURRENT ranking from official sources (QS World Rankings, Times Higher Education, or official national rankings).
+            Return in this exact JSON format:
             [
                 {{
                     "type": "ranking",
-                    "text": "badge text",
-                    "details": "specific details",
-                    "field": "field name"
+                    "text": "EXACT current ranking with specific region",
+                    "details": "Exact year",
+                    "field": "Ranking field"
                 }}
             ]
 
-            Rules for badge generation:
-            1. MUST only generate the SINGLE most impressive ranking
-            2. Prioritize order:
-            - World ranking if in top 50 globally (format as "#X Globally")
-            - Program ranking if #1-3 in world (e.g., "#1 in CS")
-            - Regional leadership if #1 in region (e.g., "#1 in Europe")
-            - Specific achievement if no top rankings
-            3. Text must be 2-4 words maximum
-            4. Must be extremely specific
-            5. Include real ranking where possible
-            
-            Examples:
-            - {{"type": "world_rank", "text": "#15 Globally", "details": "QS World Rankings 2024", "field": "Overall"}}
-            - {{"type": "faculty_rank", "text": "#1 in AI", "details": "World's leading AI research center", "field": "Computer Science"}}
-            - {{"type": "region_rank", "text": "#1 in Asia", "details": "Leading Asian institution", "field": "Regional Standing"}}
+            STRICT RULES:
+            1. Only include rankings that you are 100% certain are current and accurate
+            2. Must specify exact region ONLY TRUE ONES! (e.g. "#5 in Italy for Engineering", "#120 Globally", "#15 in Europe for Business")
+            3. Include ranking year
+            4. If no verified current ranking exists, return "Established University"
+            5. NO ESTIMATES OR GUESSES - if uncertain, return "Established University"
+            6. should not be long like 1-5 words max
+            7. REAL CHECKED INFORMATION !!!
             """
 
             response = self.model.generate_content(prompt)
             badges = json.loads(response.text)
             
-            # Take only the first (best) badge
             if len(badges) > 0:
                 badge = badges[0]
-            else:
-                return [{
-                    "text": "Featured Program",
-                    "details": "Notable academic institution",
-                    "field": "Overall",
-                    "color_class": "bg-purple-600",
-                    "prefix": "✨"
-                }]
-
-            # Updated badge styling map
-            type_styling = {
-                "world_rank": {
-                    "colors": {
-                        "1": "bg-yellow-500",     # Gold for #1
-                        "2": "bg-gray-400",       # Silver for #2
-                        "3": "bg-orange-500",     # Bronze for #3
-                        "top10": "bg-blue-500",   # Blue for top 10
-                        "top50": "bg-indigo-500", # Indigo for top 50
-                    },
-                    "prefix": "🌍"
-                },
-                "faculty_rank": {
-                    "colors": {
-                        "1": "bg-yellow-500",
-                        "2": "bg-gray-400",
-                        "3": "bg-orange-500",
-                        "default": "bg-blue-500"
-                    },
-                    "prefix": "🎯"
-                },
-                "region_rank": {
-                    "colors": {
-                        "1": "bg-green-500",
-                        "default": "bg-green-600"
-                    },
-                    "prefix": "🏆"
-                }
-            }
-
-            # Extract ranking number if present
-            ranking_match = re.search(r'#(\d+)', badge["text"])
-            ranking_number = ranking_match.group(1) if ranking_match else None
-
-            badge_type = badge.get("type", "world_rank")
-            styling = type_styling.get(badge_type, type_styling["world_rank"])
-
-            # Determine color class based on ranking and type
-            if ranking_number:
-                if badge_type == "world_rank":
-                    if ranking_number == "1":
-                        color_class = styling["colors"]["1"]
-                    elif ranking_number == "2":
-                        color_class = styling["colors"]["2"]
-                    elif ranking_number == "3":
-                        color_class = styling["colors"]["3"]
-                    elif int(ranking_number) <= 10:
-                        color_class = styling["colors"]["top10"]
-                    else:
-                        color_class = styling["colors"]["top50"]
+                # Determine color and icon based on ranking type
+                if "Globally" in badge["text"]:
+                    color_class = "bg-blue-500"
+                    prefix = "🌐"
+                elif "Europe" in badge["text"]:
+                    color_class = "bg-green-500"
+                    prefix = "🌍"
                 else:
-                    color_class = styling["colors"].get(ranking_number, styling["colors"].get("default", "bg-blue-500"))
+                    color_class = "bg-blue-600"
+                    prefix = "🎓"
             else:
-                color_class = styling["colors"].get("default", "bg-blue-500")
+                # Default if no verified ranking
+                badge = {
+                    "text": "Established University",
+                    "details": "Higher Education Institution",
+                    "field": "Education"
+                }
+                color_class = "bg-blue-600"
+                prefix = "🎓"
 
             return [{
                 "text": badge["text"],
                 "details": badge["details"],
                 "field": badge["field"],
                 "color_class": color_class,
-                "prefix": styling["prefix"]
+                "prefix": prefix
             }]
 
         except Exception as e:
             self.logger.error(f"Error generating university label: {str(e)}")
             return [{
-                "text": "Featured Program",
-                "details": "Notable academic institution",
-                "field": "Overall",
-                "color_class": "bg-purple-600",
-                "prefix": "✨"
+                "text": "University",
+                "details": "Higher Education Institution",
+                "field": "Education",
+                "color_class": "bg-blue-600",
+                "prefix": "🎓"
             }]
+
+
     def get_university_details(self, university_name: str, country: str) -> Dict:
         """Get detailed information about a university"""
         try:
@@ -358,106 +307,213 @@ class UniversityRecommender:
                 "ranking": "Information unavailable"
             }
 
+
     def recommend(self, country: str, faculty: str = None, gpa: str = None,
-                        budget: str = None, sat: str = None, extra: str = None) -> Union[List[Dict], Dict[str, str]]:
-            """Generate university recommendations"""
-            if not country:
-                return {"error": "Country is required"}
+                budget: str = None, sat: str = None, extra: str = None) -> Union[List[Dict], Dict[str, str]]:
+        """Generate accurate university recommendations with specific, verified data"""
+        if not country:
+            return {"error": "Country is required"}
+
+        try:
+            prompt = f"""
+            Return EXACTLY 6 universities onlu in {country} with VERIFIED data.
+            
+            You MUST:
+            1. Return the response in VALID JSON format
+            2. Only provide real information check it few times
+            3. Use specific numbers and ranges instead of "Varies"
+            5. Follow this EXACT example format but put info about the University you are writing about:
+
+            [
+                {{
+                    "universityName": "Full Official Name",
+                    "location": "City, {country}",
+                    "tuition": {{
+                        "amount": "Exact amount in local currency",
+                        "details": "Annual/semester and program info",
+                        
+                    }},
+                    "admissionStats": {{
+                        "acceptanceRate": {{
+                            "rate": "Exact percentage or range (e.g. 65-75%)",
+                            "year": "2023",
+                            
+                        }},
+                        "gpaRequirements": {{
+                            "minimum": "3.0",
+                            "preferred": "3.5+",
+                            "notes": "For general admission"
+                        }}
+                    }},
+                    "facultyStrengths": [
+                        {{
+                            "field": "Computer Science",
+                            "ranking": "#5 in Europe",
+                            "source": "QS Rankings 2024"
+                        }}
+                    ]
+                }}
+            ]
+
+            Rules:
+            - Must be valid JSON (no trailing commas, proper quotes)
+            - All numbers must be specific (no "Varies")
+            - Skip universities without verifiable data
+            """
+
+            if faculty:
+                prompt += f"\nFocus on universities strong in: {faculty}"
+            if gpa:
+                prompt += f"\nTarget GPA level: {gpa}"
+            if sat:
+                prompt += f"\nTarget SAT score: {sat}"
+            if budget:
+                prompt += f"\nTarget budget: {budget}"
+            if extra:
+                prompt += f"\nAdditional criteria: {extra}"
+
+            # First attempt to get response
+            response = self.model.generate_content(prompt)
+            if not response or not response.text:
+                raise ValueError("No response received from model")
+
+            # Clean the response text
+            cleaned_text = response.text.strip()
+            
+            # Remove any markdown code block syntax
+            if cleaned_text.startswith("```json"):
+                cleaned_text = cleaned_text[7:]
+            if cleaned_text.endswith("```"):
+                cleaned_text = cleaned_text[:-3]
+
+            # Remove any leading/trailing whitespace or special characters
+            cleaned_text = cleaned_text.strip()
 
             try:
-                prompt = f"""
-                Please recommend exactly 6 universities in {country} that match these criteria.
-                Return the response in this exact JSON array format:
-                [
-                    {{
-                        "universityName": "University Name",
-                        "location": "City, {country}",
-                        "tuition": "Amount per year",
-                        "acceptanceRate": "XX%",
-                        "GPA": "X.XX",
-                        "facultyStrengths": "List of strong programs"
-                    }}
-                ]
-                """
+                # Attempt to parse JSON
+                recommendations = json.loads(cleaned_text)
+            except json.JSONDecodeError as e:
+                # If first attempt fails, try to extract JSON using regex
+                json_match = re.search(r'\[.*\]', cleaned_text, re.DOTALL)
+                if not json_match:
+                    # If still no valid JSON, try one more time with a more explicit prompt
+                    retry_prompt = f"""
+                    The previous response was not valid JSON. Please provide exactly 6 universities in {country} 
+                    in STRICT JSON format. No explanations, no markdown, ONLY the JSON array.
+                    """
+                    retry_response = self.model.generate_content(retry_prompt)
+                    cleaned_retry = retry_response.text.strip()
+                    if cleaned_retry.startswith("```json"):
+                        cleaned_retry = cleaned_retry[7:]
+                    if cleaned_retry.endswith("```"):
+                        cleaned_retry = cleaned_retry[:-3]
+                    recommendations = json.loads(cleaned_retry)
+                else:
+                    recommendations = json.loads(json_match.group())
 
-                if faculty:
-                    prompt += f"\nField of study: {faculty}"
-                if gpa:
-                    prompt += f"\nStudent GPA: {gpa}"
-                if sat:
-                    prompt += f"\nSAT score: {sat}"
-                if budget:
-                    prompt += f"\nBudget: {budget}"
-                if extra:
-                    prompt += f"\nAdditional requirements: {extra}"
-
-                prompt += "\nPlease ensure the response is ONLY the JSON array with exactly 6 universities."
-
-                response = self.model.generate_content(prompt)
-                if not response or not response.text:
-                    return {"error": "No response received from AI model"}
-
-                cleaned_text = response.text.strip()
-                if cleaned_text.startswith("```json"):
-                    cleaned_text = cleaned_text[7:]
-                if cleaned_text.endswith("```"):
-                    cleaned_text = cleaned_text[:-3]
-                cleaned_text = cleaned_text.strip()
-
+            # Process and validate each university
+            processed_recommendations = []
+            for uni in recommendations:
                 try:
-                    recommendations = json.loads(cleaned_text)
+                    # Basic validation of required fields
+                    if not all(key in uni for key in ["universityName", "location", "tuition"]):
+                        continue
+
+                    processed_uni = {
+                        "universityName": uni["universityName"],
+                        "location": uni["location"],
+                        "tuition": self._format_tuition_info(uni["tuition"]),
+                        "acceptanceRate": self._format_acceptance_info(
+                            uni.get("admissionStats", {}).get("acceptanceRate", {})
+                        ),
+                        "GPA": self._format_gpa_info(
+                            uni.get("admissionStats", {}).get("gpaRequirements", {})
+                        ),
+                        "facultyStrengths": self._format_faculty_strengths(
+                            uni.get("facultyStrengths", [])
+                        )
+                    }
+
+                    # Add image and label
+                    processed_uni["imageUrl"] = self._get_university_image(
+                        processed_uni["universityName"], 
+                        country
+                    )
+                    processed_uni["label"] = self._generate_university_label(
+                        processed_uni["universityName"], 
+                        processed_uni["facultyStrengths"]
+                    )
                     
-                    # Validate response structure
-                    if not isinstance(recommendations, list):
-                        return {"error": "Invalid response format - expected a list"}
-                        
-                    if len(recommendations) != 6:
-                        return {"error": f"Expected 6 universities, got {len(recommendations)}"}
+                    processed_recommendations.append(processed_uni)
+                except Exception as e:
+                    self.logger.error(f"Error processing university {uni.get('universityName', 'unknown')}: {str(e)}")
+                    continue
 
-                    # Process each university
-                    processed_recommendations = []
-                    for uni in recommendations:
-                        # Validate required fields
-                        required_fields = ["universityName", "location", "tuition", "acceptanceRate", "GPA", "facultyStrengths"]
-                        if not all(key in uni for key in required_fields):
-                            continue
+            if not processed_recommendations:
+                return {"error": "Could not generate verified recommendations"}
 
-                        # Process faculty strengths
-                        if isinstance(uni.get('facultyStrengths'), list):
-                            uni['facultyStrengths'] = ', '.join(str(f).strip("'[]") for f in uni['facultyStrengths'])
-                        elif isinstance(uni.get('facultyStrengths'), str):
-                            uni['facultyStrengths'] = uni['facultyStrengths'].strip("'[]")
+            return processed_recommendations
 
-                        # Add image URL and label
-                        try:
-                            university_name = uni.get('universityName', '')
-                            uni['imageUrl'] = self._get_university_image(university_name, country)
-                            uni['label'] = self._generate_university_label(university_name, uni['facultyStrengths'])
-                            processed_recommendations.append(uni)
-                        except Exception as e:
-                            self.logger.error(f"Error getting image/label for {university_name}: {str(e)}")
-                            uni['imageUrl'] = "default_university_image_url.jpg"
-                            uni['label'] = [{
-                                "text": "Featured University",
-                                "details": "Notable academic institution",
-                                "field": "Overall",
-                                "color_class": "bg-purple-600",
-                                "prefix": "✨"
-                            }]
-                            processed_recommendations.append(uni)
+        except Exception as e:
+            self.logger.error(f"Error in recommend method: {str(e)}")
+            return {"error": f"Error generating recommendations: {str(e)}"}
 
-                    if not processed_recommendations:
-                        return {"error": "Failed to process any university recommendations"}
+    def _format_tuition_info(self, tuition_data: Dict) -> str:
+        """Format tuition information with specific details"""
+        if isinstance(tuition_data, dict):
+            amount = tuition_data.get("amount", "")
+            details = tuition_data.get("details", "")
+            
+            formatted = f"{amount}"
+            if details:
+                formatted += f" ({details})"
+            return formatted
+        return str(tuition_data)
 
-                    return processed_recommendations
+    def _format_acceptance_info(self, acceptance_data: Dict) -> str:
+        """Format acceptance rate information TRUE INFO"""
+        if isinstance(acceptance_data, dict):
+            rate = acceptance_data.get("rate", "")
+            year = acceptance_data.get("year", "")
+            
+            formatted = rate
+            if year:
+                formatted += f" ({year})"
+            return formatted
+        return str(acceptance_data)
 
-                except json.JSONDecodeError as e:
-                    self.logger.error(f"JSON parsing error: {str(e)}\nText attempted to parse: {cleaned_text}")
-                    return {"error": "Failed to parse AI response as JSON"}
-
-            except Exception as e:
-                self.logger.error(f"Error generating recommendations: {str(e)}")
-                return {"error": f"Error generating recommendations: {str(e)}"}
+    def _format_gpa_info(self, gpa_data: Dict) -> str:
+        """Format GPA requirements with detailed ranges"""
+        if isinstance(gpa_data, dict):
+            minimum = gpa_data.get("minimum", "")
+            preferred = gpa_data.get("preferred", "")
+            notes = gpa_data.get("notes", "")
+            parts = []
+            if minimum:
+                parts.append(f"Min: {minimum}")
+            if preferred:
+                parts.append(f"Preferred: {preferred}")
+            formatted = ", ".join(parts)
+            if notes:
+                formatted += f" ({notes})"
+            return formatted or "Not specified"
+        return str(gpa_data)
+    def _format_faculty_strengths(self, strengths: List) -> str:
+        """Format faculty strengths(checked info) with rankings regional(continent or country or global)"""
+        if isinstance(strengths, list):
+            formatted_strengths = []
+            for strength in strengths:
+                if isinstance(strength, dict):
+                    field = strength.get("field", "")
+                    ranking = strength.get("ranking", "")
+                    if field and ranking:
+                        formatted_strengths.append(f"{field} ({ranking})")
+                    elif field:
+                        formatted_strengths.append(field)
+            return ", ".join(formatted_strengths)
+        return str(strengths)
+        
+        
     def get_career_guidance(self, question_count: int, previous_prompt: str = "") -> tuple:
         """Generate AI-driven career guidance questions and process responses"""
         try:
@@ -696,6 +752,87 @@ def career_quiz():
             'specialty.html',
             error=True
         )
+@app.route('/gpa-calculator')
+def gpa_calculator():
+    """Render the GPA calculator page"""
+    return render_template('gpa_calculator.html')
+
+@app.route('/calculate-gpa', methods=['POST'])
+def calculate_gpa():
+    """Calculate GPA based on submitted grades"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+            
+        subjects = data.get('subjects', [])
+        grading_system = data.get('gradingSystem')
+        
+        if not subjects:
+            return jsonify({'error': 'No subjects provided'}), 400
+            
+        # Define grade point mappings
+        letter_to_gpa = {
+            'A+': 4.0, 'A': 4.0, 'A-': 3.7,
+            'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+            'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+            'D+': 1.3, 'D': 1.0, 'D-': 0.7,
+            'F': 0.0
+        }
+        
+        def numeric_to_gpa(grade):
+            """Convert numeric grade to GPA points"""
+            grade = float(grade)
+            if grade >= 4.5: return 4.0
+            if grade >= 4.0: return 3.7
+            if grade >= 3.5: return 3.3
+            if grade >= 3.0: return 3.0
+            if grade >= 2.5: return 2.7
+            if grade >= 2.0: return 2.0
+            return 0.0
+            
+        total_points = 0
+        total_credits = 0
+        
+        # Calculate GPA
+        for subject in subjects:
+            try:
+                credits = float(subject['credits'])
+                if credits <= 0:
+                    return jsonify({'error': 'Credits must be greater than 0'}), 400
+                    
+                if grading_system == 'letter':
+                    grade_points = letter_to_gpa.get(subject['grade'].upper())
+                    if grade_points is None:
+                        return jsonify({'error': f'Invalid letter grade: {subject["grade"]}'}), 400
+                else:
+                    try:
+                        grade = float(subject['grade'])
+                        if not (2.0 <= grade <= 5.0):
+                            return jsonify({'error': 'Numeric grade must be between 2.0 and 5.0'}), 400
+                        grade_points = numeric_to_gpa(grade)
+                    except ValueError:
+                        return jsonify({'error': 'Invalid numeric grade'}), 400
+                
+                total_points += grade_points * credits
+                total_credits += credits
+                
+            except (KeyError, ValueError) as e:
+                return jsonify({'error': f'Invalid subject data: {str(e)}'}), 400
+                
+        if total_credits == 0:
+            return jsonify({'error': 'Total credits cannot be zero'}), 400
+            
+        gpa = total_points / total_credits
+        
+        return jsonify({
+            'gpa': round(gpa, 2),
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        app.logger.error(f'Error calculating GPA: {str(e)}')
+        return jsonify({'error': 'An error occurred while calculating GPA'}), 500
     
 @app.route('/apply-recommendations', methods=['POST'])
 def apply_recommendations():

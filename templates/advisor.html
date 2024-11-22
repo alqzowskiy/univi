@@ -7,11 +7,12 @@
     <title>AI University Advisor</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <style>
-         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-body {
-    font-family: 'Inter', sans-serif;
-}
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
         /* Message animations */
         .message {
             animation: slideIn 0.3s ease-out forwards;
@@ -245,274 +246,367 @@ body {
 </head>
 
 <body class="bg-gray-50">
-    <nav class="bg-white shadow-lg fixed w-full top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <a href="/" class="flex items-center space-x-3">
-                        <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 14l9-5-9-5-9 5 9 5z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14v7" />
-                        </svg>
-                        <span
-                            class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">UniVi</span>
-                    </a>
-                </div>
-                <div class="flex items-center space-x-8">
-                    <a href="/unichooser" class="nav-link text-gray-600 hover:text-blue-600 font-medium">Find
-                        Universities</a>
-                    <a href="/advisor" class="nav-link text-blue-600 hover:text-blue-600 font-medium">AI Advisor</a>
-                    <a href="/loadquiz" class="nav-link text-gray-600 hover:text-blue-600 font-medium">Career
-                        Quiz</a>
-                </div>
-            </div>
-        </div>
-    </nav>
-    <div class="max-w-4xl mx-auto p-4 h-screen flex flex-col furtherCl">
-        <!-- Header -->
-        <div class="bg-white rounded-t-xl shadow-sm p-6 space-y-4">
-            <div class="flex items-center space-x-3">
-                <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                <h1 class="text-2xl font-bold text-gray-900">AI University Advisor</h1>
-            </div>
 
-            <!-- Categories -->
-            <div class="grid grid-cols-3 gap-4">
-                <button onclick="selectCategory('academic')"
-                    class="category-button flex items-center p-4 bg-blue-50 rounded-xl hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <svg class="w-6 h-6 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <body class="bg-gray-50">
+        <nav class="glass-card nav-white fixed w-full top-0 z-50 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-20">
+                    <!-- Logo -->
+                    <div class="flex items-center">
+                        <a href="/" class="flex items-center space-x-3 group">
+                            <div class="relative">
+                                <svg class="h-10 w-10 text-blue-600 transform group-hover:scale-110 transition-transform"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 14l9-5-9-5-9 5 9 5z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 14v7" />
+                                </svg>
+                            </div>
+                            <span
+                                class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">UNIVI
+                                AI</span>
+                        </a>
+                    </div>
+
+                    <!-- Desktop Navigation -->
+                    <div class="hidden md:flex items-center space-x-8">
+                        <a href="/unichooser"
+                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <span>Find Universities</span>
+                        </a>
+                        <a href="/advisor"
+                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                            </svg>
+                            <span>AI Advisor</span>
+                        </a>
+                        <a href="/loadquiz"
+                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Career Quiz</span>
+                        </a>
+                        <a href="/gpa-calculator"
+                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <span>GPA Calculator</span>
+                        </a>
+                        <a href="/unichooser"
+                            class="cta-button bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700">
+                            Get Started
+                        </a>
+                    </div>
+
+                    <!-- Mobile Menu Button -->
+                    <div class="md:hidden flex items-center">
+                        <button onclick="toggleMobileMenu()" class="text-gray-700 hover:text-blue-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path id="menuIcon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mobile Menu -->
+                <div id="mobileMenu" class="hidden md:hidden pb-4 bg-white">
+                    <div class="flex flex-col space-y-4">
+                        <a href="/unichooser"
+                            class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <span>Find Universities</span>
+                        </a>
+                        <a href="/advisor"
+                            class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                            </svg>
+                            <span>AI Advisor</span>
+                        </a>
+                        <a href="/loadquiz"
+                            class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Career Quiz</span>
+                        </a>
+                        <a href="/gpa-calculator"
+                            class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <span>GPA Calculator</span>
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="max-w-4xl mx-auto p-4 h-screen flex flex-col furtherCl">
+            <!-- Header -->
+            <div class="bg-white rounded-t-xl shadow-sm p-6 space-y-4">
+                <div class="flex items-center space-x-3">
+                    <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
-                    <span class="text-blue-900 font-medium">Academic Support</span>
-                </button>
+                    <h1 class="text-2xl font-bold text-gray-900">AI University Advisor</h1>
+                </div>
 
-                <button onclick="selectCategory('moral')"
-                    class="category-button flex items-center p-4 bg-green-50 rounded-xl hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500">
-                    <svg class="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                    <span class="text-green-900 font-medium">Moral Support</span>
-                </button>
+                <!-- Categories -->
+                <div class="grid grid-cols-3 gap-4">
+                    <button onclick="selectCategory('academic')"
+                        class="category-button flex items-center p-4 bg-blue-50 rounded-xl hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <svg class="w-6 h-6 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                        <span class="text-blue-900 font-medium">Academic Support</span>
+                    </button>
 
-                <button onclick="selectCategory('university')"
-                    class="category-button flex items-center p-4 bg-purple-50 rounded-xl hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    <svg class="w-6 h-6 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                    <span class="text-purple-900 font-medium">University Life</span>
-                </button>
-            </div>
+                    <button onclick="selectCategory('moral')"
+                        class="category-button flex items-center p-4 bg-green-50 rounded-xl hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <svg class="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        <span class="text-green-900 font-medium">Moral Support</span>
+                    </button>
 
-            <!-- Quick Links -->
-            <div class="flex gap-3 overflow-x-auto pb-2 quick-links">
-                <button onclick="sendQuickQuestion('What are the key skills needed for university success?')"
-                    class="quick-link px-4 py-2 bg-gray-50 text-gray-700 rounded-full hover:bg-gray-100 whitespace-nowrap">
-                    Success Skills
-                </button>
-                <button onclick="sendQuickQuestion('How can I manage academic stress?')"
-                    class="quick-link px-4 py-2 bg-gray-50 text-gray-700 rounded-full hover:bg-gray-100 whitespace-nowrap">
-                    Stress Management
-                </button>
-                <button onclick="sendQuickQuestion('What extracurricular activities should I join?')"
-                    class="quick-link px-4 py-2 bg-gray-50 text-gray-700 rounded-full hover:bg-gray-100 whitespace-nowrap">
-                    Activities
-                </button>
-                <button onclick="sendQuickQuestion('How to balance study and social life?')"
-                    class="quick-link px-4 py-2 bg-gray-50 text-gray-700 rounded-full hover:bg-gray-100 whitespace-nowrap">
-                    Work-Life Balance
-                </button>
-            </div>
-        </div>
+                    <button onclick="selectCategory('university')"
+                        class="category-button flex items-center p-4 bg-purple-50 rounded-xl hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <svg class="w-6 h-6 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        <span class="text-purple-900 font-medium">University Life</span>
+                    </button>
+                </div>
 
-        <!-- Error Message -->
-        <div id="errorMessage" class="error-message">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>An error occurred. Please try again.</span>
-            </div>
-        </div>
-
-        <!-- Chat Messages -->
-        <div id="messagesContainer" class="messages-container flex-1">
-            <div id="typingIndicator" class="typing-indicator">
-                <div class="flex items-center space-x-2">
-                    <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-                    <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                    <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                <!-- Quick Links -->
+                <div class="flex gap-3 overflow-x-auto pb-2 quick-links">
+                    <button onclick="sendQuickQuestion('What are the key skills needed for university success?')"
+                        class="quick-link px-4 py-2 bg-gray-50 text-gray-700 rounded-full hover:bg-gray-100 whitespace-nowrap">
+                        Success Skills
+                    </button>
+                    <button onclick="sendQuickQuestion('How can I manage academic stress?')"
+                        class="quick-link px-4 py-2 bg-gray-50 text-gray-700 rounded-full hover:bg-gray-100 whitespace-nowrap">
+                        Stress Management
+                    </button>
+                    <button onclick="sendQuickQuestion('What extracurricular activities should I join?')"
+                        class="quick-link px-4 py-2 bg-gray-50 text-gray-700 rounded-full hover:bg-gray-100 whitespace-nowrap">
+                        Activities
+                    </button>
+                    <button onclick="sendQuickQuestion('How to balance study and social life?')"
+                        class="quick-link px-4 py-2 bg-gray-50 text-gray-700 rounded-full hover:bg-gray-100 whitespace-nowrap">
+                        Work-Life Balance
+                    </button>
                 </div>
             </div>
-        </div>
 
-        <!-- Input Area -->
-        <div class="input-container p-4">
-            <form onsubmit="sendMessage(event)" class="relative">
-                <input type="text" id="messageInput" placeholder="Ask me anything about university life..."
-                    class="w-full pl-4 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    autocomplete="off">
-                <button type="submit"
-                    class="send-button p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-message">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                </button>
-            </form>
+                    <span>An error occurred. Please try again.</span>
+                </div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div id="messagesContainer" class="messages-container flex-1">
+                <div id="typingIndicator" class="typing-indicator">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
+                        <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0.2s">
+                        </div>
+                        <div class="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style="animation-delay: 0.4s">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-container p-4">
+                <form onsubmit="sendMessage(event)" class="relative">
+                    <input type="text" id="messageInput" placeholder="Ask me anything about university life..."
+                        class="w-full pl-4 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        autocomplete="off">
+                    <button type="submit"
+                        class="send-button p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                    </button>
+                </form>
+            </div>
         </div>
-    </div>
 
-    <script>
-        // Global configuration object
-        const config = {
-            categoryContext: '',
-            currentUniversity: 'General University' // Default university context
-        };
+        <script>
+            // Global configuration object
+            const config = {
+                categoryContext: '',
+                currentUniversity: 'General University' // Default university context
+            };
 
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            const errorSpan = errorDiv.querySelector('span');
-            if (errorSpan) {
-                errorSpan.textContent = message;
-            } else {
-                errorDiv.textContent = message;
-            }
-            errorDiv.style.display = 'block';
-            setTimeout(() => {
-                errorDiv.style.display = 'none';
-            }, 5000);
-        }
-
-        function addMessage(text, type) {
-            const container = document.getElementById('messagesContainer');
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message');
-            messageDiv.classList.add(type === 'user' ? 'user-message' : 'bot-message');
-
-            // Convert markdown-style formatting to HTML
-            const formattedText = text
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/__(.*?)__/g, '<u>$1</u>')
-                .replace(/\n/g, '<br>')
-                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-600 hover:underline">$1</a>');
-
-            messageDiv.innerHTML = formattedText;
-            container.appendChild(messageDiv);
-
-            // Trigger reflow for animation
-            messageDiv.offsetHeight;
-            messageDiv.classList.add('show');
-
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function selectCategory(category) {
-            // Remove active class from all buttons
-            document.querySelectorAll('.category-button').forEach(button => {
-                button.classList.remove('active');
-            });
-
-            // Add active class to selected button
-            const selectedButton = document.querySelector(`button[onclick="selectCategory('${category}')"]`);
-            if (selectedButton) {
-                selectedButton.classList.add('active');
+            function showError(message) {
+                const errorDiv = document.getElementById('errorMessage');
+                const errorSpan = errorDiv.querySelector('span');
+                if (errorSpan) {
+                    errorSpan.textContent = message;
+                } else {
+                    errorDiv.textContent = message;
+                }
+                errorDiv.style.display = 'block';
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                }, 5000);
             }
 
-            config.categoryContext = category;
-            let message = '';
-            switch (category) {
-                case 'academic':
-                    message = "I can help you with study strategies, time management, research skills, and academic planning. What specific aspect would you like to discuss?";
-                    break;
-                case 'moral':
-                    message = "I'm here to support you with stress management, personal development, and building resilience. What's on your mind?";
-                    break;
-                case 'university':
-                    message = "Let's talk about campus life, social activities, housing, or any other aspects of university living. What would you like to know?";
-                    break;
+            function addMessage(text, type) {
+                const container = document.getElementById('messagesContainer');
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.classList.add(type === 'user' ? 'user-message' : 'bot-message');
+
+                // Convert markdown-style formatting to HTML
+                const formattedText = text
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/__(.*?)__/g, '<u>$1</u>')
+                    .replace(/\n/g, '<br>')
+                    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-600 hover:underline">$1</a>');
+
+                messageDiv.innerHTML = formattedText;
+                container.appendChild(messageDiv);
+
+                // Trigger reflow for animation
+                messageDiv.offsetHeight;
+                messageDiv.classList.add('show');
+
+                container.scrollTop = container.scrollHeight;
             }
-            addMessage(message, 'bot');
-        }
 
-        async function sendMessage(event) {
-            if (event) {
-                event.preventDefault();
-            }
-
-            const input = document.getElementById('messageInput');
-            const message = input.value.trim();
-            if (!message) return;
-
-            // Clear input and add user message
-            input.value = '';
-            addMessage(message, 'user');
-
-            // Show typing indicator
-            const typingIndicator = document.getElementById('typingIndicator');
-            typingIndicator.style.display = 'block';
-
-            // Add loading state to send button
-            const sendButton = document.querySelector('.send-button');
-            sendButton.classList.add('loading');
-            sendButton.disabled = true;
-
-            try {
-                // Prepare the request data
-                const formData = new FormData();
-                formData.append('message', message);
-                formData.append('university_name', config.currentUniversity);
-                formData.append('category', config.categoryContext);
-
-                // Send to backend
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    body: formData
+            function selectCategory(category) {
+                // Remove active class from all buttons
+                document.querySelectorAll('.category-button').forEach(button => {
+                    button.classList.remove('active');
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                // Add active class to selected button
+                const selectedButton = document.querySelector(`button[onclick="selectCategory('${category}')"]`);
+                if (selectedButton) {
+                    selectedButton.classList.add('active');
                 }
 
-                const data = await response.json();
-
-                // Hide typing indicator
-                typingIndicator.style.display = 'none';
-
-                // Handle the response
-                if (data.error) {
-                    showError("I apologize, but I encountered an error. Please try asking your question again.");
-                } else {
-                    addMessage(data.response, 'bot');
+                config.categoryContext = category;
+                let message = '';
+                switch (category) {
+                    case 'academic':
+                        message = "I can help you with study strategies, time management, research skills, and academic planning. What specific aspect would you like to discuss?";
+                        break;
+                    case 'moral':
+                        message = "I'm here to support you with stress management, personal development, and building resilience. What's on your mind?";
+                        break;
+                    case 'university':
+                        message = "Let's talk about campus life, social activities, housing, or any other aspects of university living. What would you like to know?";
+                        break;
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                typingIndicator.style.display = 'none';
-                showError("There was an error processing your request. Please try again.");
-            } finally {
-                // Remove loading state from send button
-                sendButton.classList.remove('loading');
-                sendButton.disabled = false;
+                addMessage(message, 'bot');
             }
-        }
 
-        function sendQuickQuestion(question) {
-            const input = document.getElementById('messageInput');
-            input.value = question;
-            sendMessage();
-        }
+            async function sendMessage(event) {
+                if (event) {
+                    event.preventDefault();
+                }
 
-        // Initialize the chat
-        document.addEventListener('DOMContentLoaded', function () {
-            addMessage(`Hello! I'm your AI University Advisor. I can help you with:
+                const input = document.getElementById('messageInput');
+                const message = input.value.trim();
+                if (!message) return;
+
+                // Clear input and add user message
+                input.value = '';
+                addMessage(message, 'user');
+
+                // Show typing indicator
+                const typingIndicator = document.getElementById('typingIndicator');
+                typingIndicator.style.display = 'block';
+
+                // Add loading state to send button
+                const sendButton = document.querySelector('.send-button');
+                sendButton.classList.add('loading');
+                sendButton.disabled = true;
+
+                try {
+                    // Prepare the request data
+                    const formData = new FormData();
+                    formData.append('message', message);
+                    formData.append('university_name', config.currentUniversity);
+                    formData.append('category', config.categoryContext);
+
+                    // Send to backend
+                    const response = await fetch('/chat', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    // Hide typing indicator
+                    typingIndicator.style.display = 'none';
+
+                    // Handle the response
+                    if (data.error) {
+                        showError("I apologize, but I encountered an error. Please try asking your question again.");
+                    } else {
+                        addMessage(data.response, 'bot');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    typingIndicator.style.display = 'none';
+                    showError("There was an error processing your request. Please try again.");
+                } finally {
+                    // Remove loading state from send button
+                    sendButton.classList.remove('loading');
+                    sendButton.disabled = false;
+                }
+            }
+
+            function sendQuickQuestion(question) {
+                const input = document.getElementById('messageInput');
+                input.value = question;
+                sendMessage();
+            }
+
+            // Initialize the chat
+            document.addEventListener('DOMContentLoaded', function () {
+                addMessage(`Hello! I'm your AI University Advisor. I can help you with:
 
 1. Academic Support - Study tips, course selection, and academic planning
 2. Moral Support - Dealing with stress, anxiety, and personal growth
@@ -520,39 +614,63 @@ body {
 
 Please select a category or ask any question!`, 'bot');
 
-            // Add event listener for input field
-            const input = document.getElementById('messageInput');
-            input.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
+                // Add event listener for input field
+                const input = document.getElementById('messageInput');
+                input.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+
+                // Add error handling for network issues
+                window.addEventListener('online', function () {
+                    showError("Connection restored! You can continue chatting.");
+                });
+
+                window.addEventListener('offline', function () {
+                    showError("You are currently offline. Please check your internet connection.");
+                });
+
+                // Check for scroll on quick links
+                const quickLinksContainer = document.querySelector('.quick-links');
+                if (quickLinksContainer) {
+                    const checkScroll = () => {
+                        if (quickLinksContainer.scrollWidth > quickLinksContainer.clientWidth) {
+                            quickLinksContainer.classList.add('has-scroll');
+                        } else {
+                            quickLinksContainer.classList.remove('has-scroll');
+                        }
+                    };
+                    checkScroll();
+                    window.addEventListener('resize', checkScroll);
                 }
             });
 
-            // Add error handling for network issues
-            window.addEventListener('online', function () {
-                showError("Connection restored! You can continue chatting.");
-            });
+            function toggleMobileMenu() {
+                const mobileMenu = document.getElementById('mobileMenu');
+                const menuIcon = document.getElementById('menuIcon');
 
-            window.addEventListener('offline', function () {
-                showError("You are currently offline. Please check your internet connection.");
-            });
-
-            // Check for scroll on quick links
-            const quickLinksContainer = document.querySelector('.quick-links');
-            if (quickLinksContainer) {
-                const checkScroll = () => {
-                    if (quickLinksContainer.scrollWidth > quickLinksContainer.clientWidth) {
-                        quickLinksContainer.classList.add('has-scroll');
-                    } else {
-                        quickLinksContainer.classList.remove('has-scroll');
-                    }
-                };
-                checkScroll();
-                window.addEventListener('resize', checkScroll);
+                if (mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.remove('hidden');
+                    menuIcon.setAttribute('d', 'M6 18L18 6M6 6l12 12'); // X icon
+                } else {
+                    mobileMenu.classList.add('hidden');
+                    menuIcon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16'); // Hamburger icon
+                }
             }
-        });
-    </script>
-</body>
+
+            // Close mobile menu when window is resized to desktop view
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768) { // 768px is the md breakpoint in Tailwind
+                    const mobileMenu = document.getElementById('mobileMenu');
+                    const menuIcon = document.getElementById('menuIcon');
+                    mobileMenu.classList.add('hidden');
+                    menuIcon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+                }
+            });
+
+        </script>
+    </body>
 
 </html>

@@ -6,11 +6,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UNIVI AI - Your AI-Powered University Guide</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="univilogo2.png" rel="icon">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
         body {
             font-family: 'Inter', sans-serif;
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #3b82f6;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
         }
 
         universitytext {
@@ -137,13 +159,14 @@
     <nav class="glass-card fixed w-full top-0 z-50 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-20">
+                <!-- Logo -->
                 <div class="flex items-center">
-                    <a href="/" class="flex items-center space-x-3 group">
+                    <a href="assets\univilogo2.png" class="flex items-center space-x-3 group">
                         <div class="relative">
                             <svg class="h-10 w-10 text-blue-600 transform group-hover:scale-110 transition-transform"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 14l9-5-9-5-9 5 9 5z" />
+                                    d="M12 14l9-5-9-5-9 5 9 5z" />>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14v7" />
                             </svg>
                         </div>
@@ -152,17 +175,99 @@
                             AI</span>
                     </a>
                 </div>
-                <div class="flex items-center space-x-10">
-                    <a href="/unichooser" class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg">Find
-                        Universities</a>
-                    <a href="/advisor" class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg">AI
-                        Advisor</a>
-                    <a href="/loadquiz" class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg">Career
-                        Quiz</a>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/unichooser"
+                        class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <span>Find Universities</span>
+                    </a>
+                    <a href="/advisor"
+                        class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
+                        <span>AI Advisor</span>
+                    </a>
+                    <a href="/loadquiz"
+                        class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Career Quiz</span>
+                    </a>
+                    <a href="/gpa-calculator"
+                        class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        <span>GPA Calculator</span>
+                    </a>
                     <a href="/unichooser"
                         class="cta-button bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700">
                         Get Started
                     </a>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button onclick="toggleMobileMenu()" class="text-gray-700 hover:text-blue-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path id="menuIcon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobileMenu" class="hidden md:hidden pb-4">
+                <div class="flex flex-col space-y-4">
+                    <a href="/unichooser"
+                        class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <span>Find Universities</span>
+                    </a>
+                    <a href="/advisor"
+                        class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
+                        <span>AI Advisor</span>
+                    </a>
+                    <a href="/loadquiz"
+                        class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Career Quiz</span>
+                    </a>
+                    <a href="/gpa-calculator"
+                        class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        <span>GPA Calculator</span>
+                    </a>
+                    <div class="px-4">
+                        <a href="/unichooser"
+                            class="block w-full text-center bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700">
+                            Get Started
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -178,8 +283,7 @@
                 </div>
                 <h1 class="text-6xl md:text-8xl font-bold mb-8 leading-tight">
                     Find Your Perfect<br />
-                    <universitytext>University
-                        Match</universitytext>
+                    <universitytext>University Match</universitytext>
                 </h1>
                 <p class="text-xl md:text-2xl mb-12 text-blue-100 max-w-3xl mx-auto leading-relaxed">
                     Get personalized university recommendations based on your unique profile, interests, and career
@@ -194,12 +298,12 @@
                                 d="M17 8l4 4m0 0l-4 4m4-4H3" />
                         </svg>
                     </a>
-                    <a href="/advisor"
+                    <a href="/gpa-calculator"
                         class="cta-button bg-blue-500 text-white px-10 py-5 rounded-xl font-semibold shadow-xl hover:bg-blue-600 flex items-center justify-center text-lg">
-                        Chat with AI Advisor
+                        Calculate Your GPA
                         <svg class="h-6 w-6 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                         </svg>
                     </a>
                 </div>
@@ -211,7 +315,6 @@
             </path>
         </svg>
     </div>
-
     <!-- Features Section -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32">
         <div class="text-center mb-20">
@@ -332,6 +435,30 @@
             </div>
         </div>
     </div>
+    <script>
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const menuIcon = document.getElementById('menuIcon');
+
+            if (mobileMenu.classList.contains('hidden')) {
+                mobileMenu.classList.remove('hidden');
+                menuIcon.setAttribute('d', 'M6 18L18 6M6 6l12 12'); // X icon
+            } else {
+                mobileMenu.classList.add('hidden');
+                menuIcon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16'); // Hamburger icon
+            }
+        }
+
+        // Close mobile menu when window is resized to desktop view
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) { // 768px is the md breakpoint in Tailwind
+                const mobileMenu = document.getElementById('mobileMenu');
+                const menuIcon = document.getElementById('menuIcon');
+                mobileMenu.classList.add('hidden');
+                menuIcon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+            }
+        });
+    </script>
 </body>
 
 </html>

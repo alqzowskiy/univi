@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPA Calculator - UNIVI AI</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(229, 231, 235, 0.5);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            .subject-row {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+                background-color: #f9fafb;
+                border-radius: 0.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .subject-row input,
+            .subject-row select {
+                width: 100%;
+            }
+
+            .subject-row button {
+                align-self: flex-end;
+            }
+
+            /* Grading System Buttons */
+            .grading-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .grading-buttons button {
+                width: 100%;
+                padding: 0.75rem;
+                justify-content: center;
+            }
+
+            /* Action Buttons */
+            .action-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .action-buttons button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Container Padding */
+            .container-padding {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            /* Mobile Menu Improvements */
+            .mobile-menu-items {
+                width: 100%;
+                padding: 0.5rem;
+            }
+
+            .mobile-menu-items a {
+                width: 100%;
+                padding: 1rem;
+                border-radius: 0.5rem;
+            }
+        }
+
+        /* Enhanced Mobile Navigation */
+        @media (max-width: 640px) {
+            .nav-container {
+                padding: 0 1rem;
+            }
+
+            .logo-text {
+                font-size: 1.5rem;
+            }
+
+            .mobile-menu {
+                max-height: calc(100vh - 5rem);
+                overflow-y: auto;
+            }
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #3b82f6;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+
+    <body class="bg-gray-50">
+        <nav class="glass-card nav-white fixed w-full top-0 z-50 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-20">
+                    <!-- Logo -->
+                    <div class="flex items-center">
+                        <a href="/" class="flex items-center space-x-3 group">
+                            <div class="relative">
+                                <svg class="h-10 w-10 text-blue-600 transform group-hover:scale-110 transition-transform"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 14l9-5-9-5-9 5 9 5z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 14v7" />
+                                </svg>
+                            </div>
+                            <span
+                                class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">UNIVI
+                                AI</span>
+                        </a>
+                    </div>
+
+                    <!-- Desktop Navigation -->
+                    <div class="hidden md:flex items-center space-x-8">
+                        <a href="/unichooser"
+                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <span>Find Universities</span>
+                        </a>
+                        <a href="/advisor"
+                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                            </svg>
+                            <span>AI Advisor</span>
+                        </a>
+                        <a href="/loadquiz"
+                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Career Quiz</span>
+                        </a>
+                        <a href="/gpa-calculator"
+                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <span>GPA Calculator</span>
+                        </a>
+                        <a href="/unichooser"
+                            class="cta-button bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700">
+                            Get Started
+                        </a>
+                    </div>
+
+                    <!-- Mobile Menu Button -->
+                    <div class="md:hidden flex items-center">
+                        <button onclick="toggleMobileMenu()" class="text-gray-700 hover:text-blue-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path id="menuIcon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mobile Menu -->
+                <div id="mobileMenu" class="hidden md:hidden pb-4 bg-white">
+                    <div class="flex flex-col space-y-4">
+                        <a href="/unichooser"
+                            class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <span>Find Universities</span>
+                        </a>
+                        <a href="/advisor"
+                            class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                            </svg>
+                            <span>AI Advisor</span>
+                        </a>
+                        <a href="/loadquiz"
+                            class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Career Quiz</span>
+                        </a>
+                        <a href="/gpa-calculator"
+                            class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <span>GPA Calculator</span>
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="pt-32 pb-20">
+            <div class="max-w-4xl mx-auto px-4">
+                <div class="bg-white rounded-xl shadow-lg p-8">
+                    <h1 class="text-3xl font-bold text-center mb-8">GPA Calculator</h1>
+
+                    <div class="mb-8">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Grading System</label>
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <button onclick="setGradingSystem('letter')" id="letterBtn"
+                                class="w-full md:w-auto px-4 py-2 rounded-lg bg-blue-600 text-white">
+                                Letter Grades (A-F)
+                            </button>
+                            <button onclick="setGradingSystem('numeric')" id="numericBtn"
+                                class="w-full md:w-auto px-4 py-2 rounded-lg bg-gray-100 text-gray-700">
+                                Numeric Grades (2-5)
+                            </button>
+                        </div>
+                    </div>
+
+                    <template id="subjectRowTemplate">
+                        <div
+                            class="subject-row flex md:flex-row flex-col gap-4 bg-gray-50 md:bg-transparent p-4 md:p-0 rounded-lg">
+                            <input type="text" placeholder="Subject Name" class="flex-1 p-2 border rounded">
+                            <select class="grade-input w-full md:w-24 p-2 border rounded">
+                                <option value="">Grade</option>
+                                <option value="A+">A+</option>
+                                <option value="A">A</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B">B</option>
+                                <option value="B-">B-</option>
+                                <option value="C+">C+</option>
+                                <option value="C">C</option>
+                                <option value="C-">C-</option>
+                                <option value="D+">D+</option>
+                                <option value="D">D</option>
+                                <option value="D-">D-</option>
+                                <option value="F">F</option>
+                            </select>
+                            <input type="number" placeholder="Credits" class="w-full md:w-24 p-2 border rounded-lg"
+                                min="0" step="0.5">
+                            <button onclick="removeSubject(this)" class="p-2 text-red-600 hover:text-red-800 self-end">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </template>
+                    <div id="subjectsContainer" class="space-y-4 mb-8">
+                        <!-- Initial subject row -->
+                        <div
+                            class="subject-row flex md:flex-row flex-col gap-4 bg-gray-50 md:bg-transparent p-4 md:p-0 rounded-lg">
+                            <input type="text" placeholder="Subject Name" class="flex-1 p-2 border rounded-lg">
+                            <select class="grade-input w-full md:w-24 p-2 border rounded-lg">
+                                <option value="">Grade</option>
+                                <option value="A+">A+</option>
+                                <option value="A">A</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B">B</option>
+                                <option value="B-">B-</option>
+                                <option value="C+">C+</option>
+                                <option value="C">C</option>
+                                <option value="C-">C-</option>
+                                <option value="D+">D+</option>
+                                <option value="D">D</option>
+                                <option value="D-">D-</option>
+                                <option value="F">F</option>
+                            </select>
+                            <input type="number" placeholder="Credits" class="w-full md:w-24 p-2 border rounded-lg"
+                                min="0" step="0.5">
+                            <button onclick="removeSubject(this)" class="p-2 text-red-600 hover:text-red-800 self-end">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex flex-col md:flex-row gap-4 mb-8">
+                        <button onclick="addSubject()"
+                            class="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-gray-700 hover:bg-gray-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Add Subject
+                        </button>
+                        <button onclick="calculateGPA()"
+                            class="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            Calculate GPA
+                        </button>
+                    </div>
+
+                    <!-- Result Section -->
+                    <div id="resultSection" class="hidden p-6 bg-blue-50 rounded-lg">
+                        <h3 class="text-xl font-semibold text-blue-900">Your GPA: <span id="gpaResult"></span></h3>
+                        <p class="text-blue-600 mt-2" id="gpaMessage"></p>
+                    </div>
+
+                    <!-- Error Section -->
+                    <div id="errorSection" class="hidden p-4 bg-red-50 text-red-700 rounded-lg mt-4"></div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let currentGradingSystem = 'letter';
+
+            function setGradingSystem(system) {
+                currentGradingSystem = system;
+                const letterBtn = document.getElementById('letterBtn');
+                const numericBtn = document.getElementById('numericBtn');
+
+                if (system === 'letter') {
+                    letterBtn.classList.remove('bg-gray-100', 'text-gray-700');
+                    letterBtn.classList.add('bg-blue-600', 'text-white');
+                    numericBtn.classList.remove('bg-blue-600', 'text-white');
+                    numericBtn.classList.add('bg-gray-100', 'text-gray-700');
+                    updateGradeInputs('letter');
+                } else {
+                    numericBtn.classList.remove('bg-gray-100', 'text-gray-700');
+                    numericBtn.classList.add('bg-blue-600', 'text-white');
+                    letterBtn.classList.remove('bg-blue-600', 'text-white');
+                    letterBtn.classList.add('bg-gray-100', 'text-gray-700');
+                    updateGradeInputs('numeric');
+                }
+            }
+
+            function updateGradeInputs(type) {
+                const rows = document.querySelectorAll('.subject-row');
+                rows.forEach(row => {
+                    const gradeInput = row.querySelector('.grade-input');
+                    const currentValue = gradeInput.value;
+
+                    if (type === 'letter') {
+                        const select = document.createElement('select');
+                        select.className = 'grade-input w-24 p-2 border rounded';
+                        select.innerHTML = `
+                        <option value="">Grade</option>
+                        <option value="A+">A+</option>
+                        <option value="A">A</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B">B</option>
+                        <option value="B-">B-</option>
+                        <option value="C+">C+</option>
+                        <option value="C">C</option>
+                        <option value="C-">C-</option>
+                        <option value="D+">D+</option>
+                        <option value="D">D</option>
+                        <option value="D-">D-</option>
+                        <option value="F">F</option>
+                    `;
+                        gradeInput.replaceWith(select);
+                    } else {
+                        const input = document.createElement('input');
+                        input.type = 'number';
+                        input.className = 'grade-input w-24 p-2 border rounded';
+                        input.placeholder = 'Grade';
+                        input.min = '2';
+                        input.max = '5';
+                        input.step = '0.1';
+                        gradeInput.replaceWith(input);
+                    }
+                });
+            }
+
+            function addSubject() {
+                const container = document.getElementById('subjectsContainer');
+                const newRow = document.createElement('div');
+                newRow.className = 'subject-row flex md:flex-row flex-col gap-4 bg-gray-50 md:bg-transparent p-4 md:p-0 rounded-lg';
+
+                // Create the HTML for the new row based on current grading system
+                newRow.innerHTML = `
+        <input type="text" placeholder="Subject Name" class="flex-1 p-2 border rounded">
+        ${currentGradingSystem === 'letter' ? `
+            <select class="grade-input w-full md:w-24 p-2 border rounded">
+                <option value="">Grade</option>
+                <option value="A+">A+</option>
+                <option value="A">A</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B">B</option>
+                <option value="B-">B-</option>
+                <option value="C+">C+</option>
+                <option value="C">C</option>
+                <option value="C-">C-</option>
+                <option value="D+">D+</option>
+                <option value="D">D</option>
+                <option value="D-">D-</option>
+                <option value="F">F</option>
+            </select>
+        ` : `
+            <input type="number" class="grade-input w-full md:w-24 p-2 border rounded" 
+                   placeholder="Grade" min="2" max="5" step="0.1">
+        `}
+        <input type="number" placeholder="Credits" class="w-full md:w-24 p-2 border rounded" min="0" step="0.5">
+        <button onclick="removeSubject(this)" class="p-2 text-red-600 hover:text-red-800 self-end">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+        </button>
+    `;
+
+                container.appendChild(newRow);
+            }
+
+            function removeSubject(button) {
+                const container = document.getElementById('subjectsContainer');
+                if (container.children.length > 1) {
+                    button.closest('.subject-row').remove();
+                }
+            }
+
+            function showError(message) {
+                const errorSection = document.getElementById('errorSection');
+                errorSection.textContent = message;
+                errorSection.classList.remove('hidden');
+                document.getElementById('resultSection').classList.add('hidden');
+            }
+
+            function showResult(gpa) {
+                const resultSection = document.getElementById('resultSection');
+                const gpaResult = document.getElementById('gpaResult');
+                const gpaMessage = document.getElementById('gpaMessage');
+
+                gpaResult.textContent = gpa;
+
+                // Set encouraging message based on GPA
+                if (gpa >= 3.5) {
+                    gpaMessage.textContent = "Excellent work! Keep up the outstanding performance!";
+                } else if (gpa >= 3.0) {
+                    gpaMessage.textContent = "Good job! You're performing well above average!";
+                } else if (gpa >= 2.5) {
+                    gpaMessage.textContent = "You're doing well! Keep pushing yourself to improve!";
+                } else {
+                    gpaMessage.textContent = "Keep working hard! Every small improvement counts!";
+                }
+
+                resultSection.classList.remove('hidden');
+                document.getElementById('errorSection').classList.add('hidden');
+            }
+
+            async function calculateGPA() {
+                const rows = document.querySelectorAll('.subject-row');
+                const subjects = [];
+
+                for (const row of rows) {
+                    const name = row.querySelector('input[type="text"]').value;
+                    const grade = row.querySelector('.grade-input').value;
+                    const credits = row.querySelector('input[type="number"]').value;
+
+                    if (!name || !grade || !credits) {
+                        showError('Please fill in all fields for each subject');
+                        return;
+                    }
+
+                    if (currentGradingSystem === 'numeric' && (parseFloat(grade) < 2 || parseFloat(grade) > 5)) {
+                        showError('Numeric grades must be between 2.0 and 5.0');
+                        return;
+                    }
+
+                    subjects.push({
+                        name: name,
+                        grade: grade,
+                        credits: credits
+                    });
+                }
+
+                try {
+                    const response = await fetch('/calculate-gpa', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            subjects: subjects,
+                            gradingSystem: currentGradingSystem
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showResult(data.gpa);
+                    } else {
+                        showError(data.error || 'An error occurred while calculating GPA');
+                    }
+                } catch (error) {
+                    showError('Failed to calculate GPA. Please try again.');
+                    console.error('Error:', error);
+                }
+            }
+
+            function toggleMobileMenu() {
+                const mobileMenu = document.getElementById('mobileMenu');
+                const menuIcon = document.getElementById('menuIcon');
+
+                if (mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.remove('hidden');
+                    menuIcon.setAttribute('d', 'M6 18L18 6M6 6l12 12'); // X icon
+                } else {
+                    mobileMenu.classList.add('hidden');
+                    menuIcon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16'); // Hamburger icon
+                }
+            }
+
+            // Close mobile menu when window is resized to desktop view
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768) { // 768px is the md breakpoint in Tailwind
+                    const mobileMenu = document.getElementById('mobileMenu');
+                    const menuIcon = document.getElementById('menuIcon');
+                    mobileMenu.classList.add('hidden');
+                    menuIcon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+                }
+            });
+
+            function updateGradeInputs(type) {
+                const rows = document.querySelectorAll('.subject-row');
+                rows.forEach(row => {
+                    const gradeInput = row.querySelector('.grade-input');
+
+                    if (type === 'letter') {
+                        const select = document.createElement('select');
+                        select.className = 'grade-input w-full md:w-24 p-2 border rounded';
+                        select.innerHTML = `
+                <option value="">Grade</option>
+                <option value="A+">A+</option>
+                <option value="A">A</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B">B</option>
+                <option value="B-">B-</option>
+                <option value="C+">C+</option>
+                <option value="C">C</option>
+                <option value="C-">C-</option>
+                <option value="D+">D+</option>
+                <option value="D">D</option>
+                <option value="D-">D-</option>
+                <option value="F">F</option>
+            `;
+                        gradeInput.replaceWith(select);
+                    } else {
+                        const input = document.createElement('input');
+                        input.type = 'number';
+                        input.className = 'grade-input w-full md:w-24 p-2 border rounded';
+                        input.placeholder = 'Grade';
+                        input.min = '2';
+                        input.max = '5';
+                        input.step = '0.1';
+                        gradeInput.replaceWith(input);
+                    }
+                });
+            }
+
+            function addSubject() {
+                const container = document.getElementById('subjectsContainer');
+                const template = document.getElementById('subjectRowTemplate');
+                const clone = template.content.cloneNode(true);
+
+                // Update grade input based on current grading system
+                const gradeInput = clone.querySelector('.grade-input');
+                if (currentGradingSystem === 'numeric') {
+                    const numericInput = document.createElement('input');
+                    numericInput.type = 'number';
+                    numericInput.className = 'grade-input w-full md:w-24 p-2 border rounded';
+                    numericInput.placeholder = 'Grade';
+                    numericInput.min = '2';
+                    numericInput.max = '5';
+                    numericInput.step = '0.1';
+                    gradeInput.replaceWith(numericInput);
+                }
+
+                container.appendChild(clone);
+            }
+
+        </script>
+    </body>
+
+</html>
