@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-ign
 
 <head>
+    {% include 'partials/firebaseconfig.html' %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Career Guidance Quiz</title>
@@ -12,6 +12,12 @@ ign
 
         body {
             font-family: 'Inter', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
         .fade-in {
@@ -30,10 +36,6 @@ ign
             }
         }
 
-        .transition-all {
-            transition: all 0.3s ease;
-        }
-
         .nav-link {
             position: relative;
         }
@@ -42,11 +44,12 @@ ign
             content: '';
             position: absolute;
             bottom: -2px;
-            left: 0;
+            left: 50%;
             width: 0;
             height: 2px;
             background: #3b82f6;
-            transition: width 0.2s ease-in-out;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
         }
 
         .nav-link:hover::after {
@@ -56,223 +59,105 @@ ign
 </head>
 
 <body class="bg-gray-50 min-h-screen">
+    {% include 'partials/navigation.html' %}
 
-    <body class="bg-gray-50">
-        <nav class="glass-card nav-white fixed w-full top-0 z-50 shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-20">
-                    <!-- Logo -->
-                    <div class="flex items-center">
-                        <a href="/" class="flex items-center space-x-3 group">
-                            <div class="relative">
-                                <svg class="h-10 w-10 text-blue-600 transform group-hover:scale-110 transition-transform"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 14l9-5-9-5-9 5 9 5z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 14v7" />
-                                </svg>
-                            </div>
-                            <span
-                                class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">UNIVI
-                                AI</span>
-                        </a>
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto p-6 mt-20">
+        <!-- Progress Bar -->
+        <div class="mb-8">
+            <div class="h-2 bg-gray-200 rounded-full">
+                <div class="h-2 bg-blue-600 rounded-full transition-all duration-500"
+                    style="width: {{ (count / 6) * 100 }}%">
+                </div>
+            </div>
+            <p class="text-center mt-2 text-sm text-gray-600">Question {{ count }} of 6</p>
+        </div>
+
+        <div class="fade-in">
+            <!-- Question Container -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                {% if error %}
+                <div class="bg-red-50 p-6">
+                    <div class="text-red-600 text-center">
+                        <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <h2 class="text-xl font-bold mb-2">{{ error }}</h2>
+                        <p class="text-sm">Please try again or start over.</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="bg-gradient-to-r from-blue-600 to-blue-500 p-6">
+                    <h1 class="text-2xl font-bold text-white mb-2">{{ question }}</h1>
+                    {% if description %}
+                    <p class="text-blue-100">{{ description }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Answer Form -->
+                <form method="post" class="p-6" id="quizForm">
+                    <input type="hidden" name="hid" value="{{ count }}">
+                    <input type="hidden" name="hidprompt" value="{{ newprompt }}">
+
+                    <div class="space-y-4">
+                        <label for="answer" class="block text-gray-700 font-medium">Your Answer:</label>
+                        <textarea id="answer" name="answer"
+                            class="w-full h-32 p-4 border rounded-lg transition-all focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                            placeholder="Share your thoughts here..." required></textarea>
                     </div>
 
-                    <!-- Desktop Navigation -->
-                    <div class="hidden md:flex items-center space-x-8">
-                        <a href="/unichooser"
-                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                            <span>Find Universities</span>
-                        </a>
-                        <a href="/advisor"
-                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                            </svg>
-                            <span>AI Advisor</span>
-                        </a>
-                        <a href="/loadquiz"
-                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span>Career Quiz</span>
-                        </a>
-                        <a href="/gpa-calculator"
-                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                            <span>GPA Calculator</span>
-                        </a>
-                        <a href="/unichooser"
-                            class="cta-button bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700">
-                            Get Started
-                        </a>
-                    </div>
-
-                    <!-- Mobile Menu Button -->
-                    <div class="md:hidden flex items-center">
-                        <button onclick="toggleMobileMenu()" class="text-gray-700 hover:text-blue-600">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path id="menuIcon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
+                    <div class="mt-6 flex justify-end">
+                        <button type="submit"
+                            class="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium transition-all hover:bg-blue-700 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                            {% if count >= 5 %}Finish Quiz{% else %}Next Question{% endif %}
                         </button>
                     </div>
-                </div>
+                </form>
+                {% endif %}
 
-                <!-- Mobile Menu -->
-                <div id="mobileMenu" class="hidden md:hidden pb-4 bg-white">
-                    <div class="flex flex-col space-y-4">
-                        <a href="/unichooser"
-                            class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!-- Tips Section -->
+                <div class="mx-6 mb-6 bg-blue-50 rounded-xl p-6">
+                    <h3 class="text-lg font-semibold text-blue-800 mb-4">💡 Tips for Better Responses:</h3>
+                    <ul class="space-y-3 text-blue-700">
+                        <li class="flex items-center">
+                            <svg class="flex-shrink-0 w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    d="M5 13l4 4L19 7" />
                             </svg>
-                            <span>Find Universities</span>
-                        </a>
-                        <a href="/advisor"
-                            class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <span>Be specific and detailed in your answers</span>
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="flex-shrink-0 w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                                    d="M5 13l4 4L19 7" />
                             </svg>
-                            <span>AI Advisor</span>
-                        </a>
-                        <a href="/loadquiz"
-                            class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <span>Share your genuine interests and experiences</span>
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="flex-shrink-0 w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    d="M5 13l4 4L19 7" />
                             </svg>
-                            <span>Career Quiz</span>
-                        </a>
-                        <a href="/gpa-calculator"
-                            class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                            <span>GPA Calculator</span>
-                        </a>
-
-                    </div>
-                </div>
-            </div>
-        </nav>
-
-
-
-        <!-- Main Content -->
-        <div class="max-w-4xl mx-auto p-6 mt-20">
-            <!-- Progress Bar -->
-            <div class="mb-8">
-                <div class="h-2 bg-gray-200 rounded-full">
-                    <div class="h-2 bg-blue-600 rounded-full transition-all duration-500"
-                        style="width: {{ (count / 6) * 100 }}%">
-                    </div>
-                </div>
-                <p class="text-center mt-2 text-sm text-gray-600">Question {{ count }} of 6</p>
-            </div>
-
-            <div class="fade-in">
-                <!-- Question Container -->
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                    {% if error %}
-                    <div class="bg-red-50 p-6">
-                        <div class="text-red-600 text-center">
-                            <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            <h2 class="text-xl font-bold mb-2">{{ error }}</h2>
-                            <p class="text-sm">Please try again or start over.</p>
-                        </div>
-                    </div>
-                    {% else %}
-                    <div class="bg-gradient-to-r from-blue-600 to-blue-500 p-6">
-                        <h1 class="text-2xl font-bold text-white mb-2">{{ question }}</h1>
-                        {% if description %}
-                        <p class="text-blue-100">{{ description }}</p>
-                        {% endif %}
-                    </div>
-
-                    <!-- Answer Form -->
-                    <form method="post" class="p-6" id="quizForm">
-                        <input type="hidden" name="hid" value="{{ count }}">
-                        <input type="hidden" name="hidprompt" value="{{ newprompt }}">
-
-                        <div class="space-y-4">
-                            <label for="answer" class="block text-gray-700 font-medium">Your Answer:</label>
-                            <textarea id="answer" name="answer"
-                                class="w-full h-32 p-4 border rounded-lg transition-all focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                                placeholder="Share your thoughts here..." required></textarea>
-                        </div>
-
-                        <div class="mt-6 flex justify-end">
-                            <button type="submit"
-                                class="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium transition-all hover:bg-blue-700 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                                {% if count >= 5 %}Finish Quiz{% else %}Next Question{% endif %}
-                            </button>
-                        </div>
-                    </form>
-                    {% endif %}
-
-                    <!-- Tips Section -->
-                    <div class="mx-6 mb-6 bg-blue-50 rounded-xl p-6">
-                        <h3 class="text-lg font-semibold text-blue-800 mb-4">💡 Tips for Better Responses:</h3>
-                        <ul class="space-y-3 text-blue-700">
-                            <li class="flex items-center">
-                                <svg class="flex-shrink-0 w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span>Be specific and detailed in your answers</span>
-                            </li>
-                            <li class="flex items-center">
-                                <svg class="flex-shrink-0 w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span>Share your genuine interests and experiences</span>
-                            </li>
-                            <li class="flex items-center">
-                                <svg class="flex-shrink-0 w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span>Consider both your strengths and areas for growth</span>
-                            </li>
-                        </ul>
-                    </div>
+                            <span>Consider both your strengths and areas for growth</span>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
+    </div>
 
-        <script>
-            // Form submission handler
-            document.getElementById('quizForm')?.addEventListener('submit', function (e) {
-                // Disable submit button to prevent double submission
-                const submitButton = this.querySelector('button[type="submit"]');
-                if (submitButton) {
-                    submitButton.disabled = true;
-                    submitButton.classList.add('opacity-75');
-
-                    // Add loading state
-                    submitButton.innerHTML = `
+    <script>
+        // Your existing JavaScript for the quiz form
+        document.getElementById('quizForm')?.addEventListener('submit', function (e) {
+            const submitButton = this.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.classList.add('opacity-75');
+                submitButton.innerHTML = `
                     <span class="inline-flex items-center">
                         <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -280,42 +165,18 @@ ign
                         </svg>
                         Processing...
                     </span>`;
-                }
-            });
-
-            // Auto-resize textarea as user types
-            const textarea = document.getElementById('answer');
-            if (textarea) {
-                textarea.addEventListener('input', function () {
-                    this.style.height = 'auto';
-                    this.style.height = (this.scrollHeight) + 'px';
-                });
             }
-            function toggleMobileMenu() {
-                const mobileMenu = document.getElementById('mobileMenu');
-                const menuIcon = document.getElementById('menuIcon');
+        });
 
-                if (mobileMenu.classList.contains('hidden')) {
-                    mobileMenu.classList.remove('hidden');
-                    menuIcon.setAttribute('d', 'M6 18L18 6M6 6l12 12'); // X icon
-                } else {
-                    mobileMenu.classList.add('hidden');
-                    menuIcon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16'); // Hamburger icon
-                }
-            }
-
-            // Close mobile menu when window is resized to desktop view
-            window.addEventListener('resize', () => {
-                if (window.innerWidth >= 768) { // 768px is the md breakpoint in Tailwind
-                    const mobileMenu = document.getElementById('mobileMenu');
-                    const menuIcon = document.getElementById('menuIcon');
-                    mobileMenu.classList.add('hidden');
-                    menuIcon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
-                }
+        // Auto-resize textarea
+        const textarea = document.getElementById('answer');
+        if (textarea) {
+            textarea.addEventListener('input', function () {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
             });
-
-
-        </script>
-    </body>
+        }
+    </script>
+</body>
 
 </html>

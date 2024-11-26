@@ -9,6 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <link href="univilogo2.png" rel="icon">
+    {% include 'partials/firebaseconfig.html' %}
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -76,6 +77,22 @@
             background: url('/api/placeholder/1920/1080') center/cover;
             opacity: 0.15;
             mix-blend-mode: soft-light;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #3b82f6;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
         }
 
         .hero-pattern {
@@ -157,154 +174,7 @@
 </head>
 
 <body class="bg-gray-50">
-    <!-- Navigation -->
-    <!-- Replace the navigation section -->
-    <nav class="glass-card nav-white fixed w-full top-0 z-50 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-20">
-                <!-- Logo -->
-                <div class="flex items-center">
-                    <a href="/" class="flex items-center space-x-3 group">
-                        <div class="relative">
-                            <svg class="h-10 w-10 text-blue-600 transform group-hover:scale-110 transition-transform"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 14l9-5-9-5-9 5 9 5z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14v7" />
-                            </svg>
-                        </div>
-                        <span
-                            class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">UNIVI
-                            AI</span>
-                    </a>
-                </div>
-
-                <!-- Desktop Navigation -->
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="/unichooser"
-                        class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        <span>Find Universities</span>
-                    </a>
-                    <a href="/advisor"
-                        class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                        </svg>
-                        <span>AI Advisor</span>
-                    </a>
-                    <a href="/loadquiz"
-                        class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>Career Quiz</span>
-                    </a>
-                    <a href="/gpa-calculator"
-                        class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        <span>GPA Calculator</span>
-                    </a>
-
-                    <!-- Auth Buttons -->
-                    <div id="authButtons" class="flex items-center space-x-4">
-                        <a href="/user" id="userProfileBtn"
-                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg hidden">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            <span class="ml-2">Profile</span>
-                        </a>
-                        <a href="/login" id="loginBtn"
-                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg">Sign In</a>
-                        <a href="/register" id="registerBtn"
-                            class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">Sign
-                            Up</a>
-                        <button id="logoutBtn"
-                            class="hidden bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">Sign
-                            Out</button>
-                    </div>
-                </div>
-
-                <!-- Mobile Menu Button -->
-                <div class="md:hidden flex items-center">
-                    <button onclick="toggleMobileMenu()" class="text-gray-700 hover:text-blue-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path id="menuIcon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Mobile Menu -->
-            <div id="mobileMenu" class="hidden md:hidden pb-4 bg-white">
-                <div class="flex flex-col space-y-4">
-                    <a href="/unichooser"
-                        class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        <span>Find Universities</span>
-                    </a>
-                    <a href="/advisor"
-                        class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                        </svg>
-                        <span>AI Advisor</span>
-                    </a>
-                    <a href="/loadquiz"
-                        class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>Career Quiz</span>
-                    </a>
-                    <a href="/gpa-calculator"
-                        class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        <span>GPA Calculator</span>
-                    </a>
-
-                    <!-- Mobile Auth Buttons -->
-                    <div id="mobileAuthButtons" class="space-y-2 px-4">
-                        <a href="/user" id="mobileUserProfileBtn"
-                            class="flex items-center gap-2 text-gray-700 hover:text-blue-600 font-medium hidden">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            Profile
-                        </a>
-                        <a href="/login" id="mobileLoginBtn"
-                            class="block text-gray-700 hover:text-blue-600 font-medium">Sign In</a>
-                        <a href="/register" id="mobileRegisterBtn"
-                            class="block w-full text-center bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">Sign
-                            Up</a>
-                        <button id="mobileLogoutBtn"
-                            class="hidden w-full text-center bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">Sign
-                            Out</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+    {% include 'partials/navigation.html' %}
 
     <!-- Hero Section -->
     <div class="hero-gradient text-white pt-32">
@@ -470,25 +340,33 @@
     </div>
     <script>
         function toggleMobileMenu() {
+            const menuBtn = document.getElementById('menuBtn');
             const mobileMenu = document.getElementById('mobileMenu');
-            const menuIcon = document.getElementById('menuIcon');
+            const menuIcon = menuBtn.querySelector('svg path');
 
-            if (mobileMenu.classList.contains('hidden')) {
-                mobileMenu.classList.remove('hidden');
-                menuIcon.setAttribute('d', 'M6 18L18 6M6 6l12 12'); // X icon
-            } else {
-                mobileMenu.classList.add('hidden');
-                menuIcon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16'); // Hamburger icon
+            // Add click event listener to menu button
+            if (menuBtn && mobileMenu) {
+                menuBtn.addEventListener('click', () => {
+                    // Toggle the 'hidden' class on mobile menu
+                    mobileMenu.classList.toggle('hidden');
+
+                    // Update the menu icon (optional - if you want to change the icon)
+                    if (mobileMenu.classList.contains('hidden')) {
+                        menuIcon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16'); // Hamburger icon
+                    } else {
+                        menuIcon.setAttribute('d', 'M6 18L18 6M6 6l12 12'); // X icon
+                    }
+                });
             }
         }
-
-        // Close mobile menu when window is resized to desktop view
         window.addEventListener('resize', () => {
             if (window.innerWidth >= 768) { // 768px is the md breakpoint in Tailwind
-                const mobileMenu = document.getElementById('mobileMenu');
-                const menuIcon = document.getElementById('menuIcon');
-                mobileMenu.classList.add('hidden');
-                menuIcon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+                if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.add('hidden');
+                    if (menuIcon) {
+                        menuIcon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+                    }
+                }
             }
         });
     </script>

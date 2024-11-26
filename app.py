@@ -595,10 +595,9 @@ def register():
     if auth_cookie:
         return redirect(url_for('index'))
     return render_template('register.html')
-
 @app.route('/user')
-# @login_required
 def user_profile():
+    """Render the user profile page"""
     return render_template('user.html')
 
 @app.route('/')
@@ -798,12 +797,10 @@ def calculate_gpa():
         def numeric_to_gpa(grade):
             """Convert numeric grade to GPA points"""
             grade = float(grade)
-            if grade >= 4.5: return 4.0
-            if grade >= 4.0: return 3.7
-            if grade >= 3.5: return 3.3
-            if grade >= 3.0: return 3.0
-            if grade >= 2.5: return 2.7
-            if grade >= 2.0: return 2.0
+            if grade >= 5.0: return 4.0
+            if grade >= 4.0: return 3.0
+            if grade >= 3.0: return 2.0
+            if grade >= 2.0: return 1.0
             return 0.0
             
         total_points = 0

@@ -6,7 +6,337 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GPA Calculator - UNIVI AI</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <!-- Add this to the head section of gpa_calculator.html -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            // Get DOM elements
+            const gradingSystemBtns = document.querySelectorAll('[name="gradingSystem"]');
+            const subjectsContainer = document.getElementById('subjectsContainer');
+            const addSubjectBtn = document.querySelector('[aria-label="Add Subject"]');
+            const calculateBtn = document.querySelector('[aria-label="Calculate GPA"]');
+            const resultSection = document.getElementById('resultSection');
+            const errorSection = document.getElementById('errorSection');
+            const gpaResult = document.getElementById('gpaResult');
 
+            let currentSystem = 'letter'; // Default grading system
+
+            // Grade point mappings
+            const letterToGPA = {
+                'A+': 4.0, 'A': 4.0, 'A-': 3.7,
+                'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+                'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+                'D+': 1.3, 'D': 1.0, 'D-': 0.7,
+                'F': 0.0
+            };
+
+            // Helper function to create a new subject row
+            function createSubjectRow() {
+                const row = document.createElement('div');
+                row.className = 'subject-row flex md:flex-row flex-col gap-4 bg-gray-50 md:bg-transparent p-4 md:p-0 rounded-lg';
+
+                row.innerHTML = `
+                <input type="text" class="flex-1 p-2 border rounded-lg" placeholder="Subject Name" required>
+                <input type="number" class="w-24 p-2 border rounded-lg" placeholder="Credits" min="0" step="0.5" required>
+                <select class="w-24 p-2 border rounded-lg grade-select">
+                    ${currentSystem === 'letter' ?
+                        Object.keys(letterToGPA).map(grade =>
+                            `<option value="${grade}">${grade}</option>`
+                        ).join('') :
+                        '<option value="">Grade</option>'}
+                </select>
+                <button class="delete-subject text-red-500 hover:text-red-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+            `;
+
+                return row;
+            }
+
+            // Add initial subject row
+            subjectsContainer.appendChild(createSubjectRow());
+
+            // Event Listeners
+            addSubjectBtn?.addEventListener('click', () => {
+                subjectsContainer.appendChild(createSubjectRow());
+            });
+
+            subjectsContainer.addEventListener('click', (e) => {
+                if (e.target.closest('.delete-subject')) {
+                    const row = e.target.closest('.subject-row');
+                    if (subjectsContainer.children.length > 1) {
+                        row.remove();
+                    }
+                }
+            });
+
+            // Handle grading system change
+            gradingSystemBtns.forEach(btn => {
+                btn.addEventListener('change', (e) => {
+                    currentSystem = e.target.value;
+                    // Clear and recreate subject rows
+                    subjectsContainer.innerHTML = '';
+                    subjectsContainer.appendChild(createSubjectRow());
+                });
+            });
+
+            // Calculate GPA and save to Firebase
+            calculateBtn?.addEventListener('click', async () => {
+                try {
+                    const user = window.auth.currentUser;
+                    if (!user) {
+                        throw new Error('Please log in to save your GPA');
+                    }
+
+                    const subjects = [];
+                    let totalPoints = 0;
+                    let totalCredits = 0;
+
+                    // Gather subject data
+                    document.querySelectorAll('.subject-row').forEach(row => {
+                        const subjectName = row.querySelector('input[type="text"]').value;
+                        const credits = parseFloat(row.querySelector('input[type="number"]').value);
+                        const grade = row.querySelector('select').value;
+
+                        if (!subjectName || isNaN(credits) || !grade) {
+                            throw new Error('Please fill in all fields');
+                        }
+
+                        let gradePoints;
+                        if (currentSystem === 'letter') {
+                            gradePoints = letterToGPA[grade];
+                        } else {
+                            gradePoints = parseFloat(grade);
+                        }
+
+                        subjects.push({ subjectName, credits, grade });
+                        totalPoints += gradePoints * credits;
+                        totalCredits += credits;
+                    });
+
+                    if (totalCredits === 0) {
+                        throw new Error('Total credits cannot be zero');
+                    }
+
+                    const gpa = totalPoints / totalCredits;
+                    const roundedGPA = Math.round(gpa * 100) / 100;
+
+                    // Save to Firebase
+                    const userRef = window.db.collection('users').doc(user.uid);
+                    await userRef.update({
+                        gpa: roundedGPA,
+                        lastGPAUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    // Save detailed GPA data
+                    const gpaDetailsRef = userRef.collection('gpaDetails').doc('latest');
+                    await gpaDetailsRef.set({
+                        gpa: roundedGPA,
+                        subjects: subjects,
+                        gradingSystem: currentSystem,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    // Add activity
+                    await userRef.collection('activity').add({
+                        description: `Updated GPA to ${roundedGPA}`,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    // Show result
+                    gpaResult.textContent = roundedGPA.toFixed(2);
+                    resultSection.classList.remove('hidden');
+                    errorSection.classList.add('hidden');
+
+                    // Redirect to profile after short delay
+                    setTimeout(() => {
+                        window.location.href = '/user';
+                    }, 2000);
+
+                } catch (error) {
+                    console.error('Error calculating GPA:', error);
+                    errorSection.textContent = error.message;
+                    errorSection.classList.remove('hidden');
+                    resultSection.classList.add('hidden');
+                }
+            });
+
+            // Load existing GPA data if available
+            async function loadExistingGPA() {
+                try {
+                    const user = window.auth.currentUser;
+                    if (!user) return;
+
+                    const gpaDetailsRef = window.db.collection('users').doc(user.uid)
+                        .collection('gpaDetails').doc('latest');
+                    const doc = await gpaDetailsRef.get();
+
+                    if (doc.exists) {
+                        const data = doc.data();
+                        if (data.subjects && data.subjects.length > 0) {
+                            // Clear existing rows
+                            subjectsContainer.innerHTML = '';
+
+                            // Set grading system
+                            document.querySelector(`[name="gradingSystem"][value="${data.gradingSystem}"]`).checked = true;
+                            currentSystem = data.gradingSystem;
+
+                            // Add subject rows with data
+                            data.subjects.forEach(subject => {
+                                const row = createSubjectRow();
+                                row.querySelector('input[type="text"]').value = subject.subjectName;
+                                row.querySelector('input[type="number"]').value = subject.credits;
+                                row.querySelector('select').value = subject.grade;
+                                subjectsContainer.appendChild(row);
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading existing GPA:', error);
+                }
+            }
+
+            // After Firebase initialization, add these security rules
+            document.addEventListener('DOMContentLoaded', async function () {
+                try {
+                    // Wait for Firebase Auth to initialize
+                    await new Promise((resolve) => {
+                        const unsubscribe = window.auth.onAuthStateChanged((user) => {
+                            unsubscribe();
+                            resolve(user);
+                        });
+                    });
+
+                    // Add auth state observer
+                    window.auth.onAuthStateChanged(async (user) => {
+                        if (!user) {
+                            window.location.href = '/login';
+                            return;
+                        }
+
+                        // Load existing GPA data after confirming auth
+                        try {
+                            const userDoc = await window.db.collection('users').doc(user.uid).get();
+                            const gpaDetailsDoc = await window.db.collection('users').doc(user.uid)
+                                .collection('gpaDetails').doc('latest').get();
+
+                            if (gpaDetailsDoc.exists) {
+                                const data = gpaDetailsDoc.data();
+                                displayExistingGPA(data);
+                            }
+                        } catch (error) {
+                            console.error('Error loading GPA data:', error);
+                            // Don't show error to user, just log it
+                        }
+                    });
+
+                    // Function to save GPA
+                    async function saveGPA(gpaData) {
+                        const user = window.auth.currentUser;
+                        if (!user) throw new Error('Not authenticated');
+
+                        const batch = window.db.batch();
+                        const userRef = window.db.collection('users').doc(user.uid);
+                        const gpaDetailsRef = userRef.collection('gpaDetails').doc('latest');
+
+                        // Update main user document
+                        batch.update(userRef, {
+                            gpa: gpaData.gpa,
+                            lastGPAUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+
+                        // Save detailed GPA data
+                        batch.set(gpaDetailsRef, {
+                            ...gpaData,
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+
+                        // Add to activity log
+                        const activityRef = userRef.collection('activity').doc();
+                        batch.set(activityRef, {
+                            description: `Updated GPA to ${gpaData.gpa.toFixed(2)}`,
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+
+                        await batch.commit();
+                    }
+
+                    // Update calculate button click handler
+                    document.querySelector('[aria-label="Calculate GPA"]').addEventListener('click', async () => {
+                        try {
+                            const gpaData = calculateGPAData();
+                            await saveGPA(gpaData);
+                            showSuccess(gpaData.gpa);
+
+                            // Redirect after short delay
+                            setTimeout(() => {
+                                window.location.href = '/user';
+                            }, 1500);
+                        } catch (error) {
+                            console.error('Error saving GPA:', error);
+                            showError(error.message);
+                        }
+                    });
+
+                } catch (error) {
+                    console.error('Firebase initialization error:', error);
+                }
+            });
+
+            // Helper function to calculate GPA
+            function calculateGPAData() {
+                const subjects = [];
+                let totalPoints = 0;
+                let totalCredits = 0;
+
+                document.querySelectorAll('.subject-row').forEach(row => {
+                    const subjectName = row.querySelector('input[type="text"]').value.trim();
+                    const credits = parseFloat(row.querySelector('input[type="number"]').value);
+                    const grade = row.querySelector('.grade-input').value;
+
+                    if (!subjectName || isNaN(credits) || !grade) {
+                        throw new Error('Please fill in all fields');
+                    }
+
+                    let gradePoints;
+                    if (currentGradingSystem === 'letter') {
+                        gradePoints = letterToGPA[grade] || 0;
+                    } else {
+                        gradePoints = parseFloat(grade);
+                        if (gradePoints < 2 || gradePoints > 5) {
+                            throw new Error('Numeric grades must be between 2.0 and 5.0');
+                        }
+                    }
+
+                    subjects.push({ subjectName, credits, grade });
+                    totalPoints += gradePoints * credits;
+                    totalCredits += credits;
+                });
+
+                if (totalCredits === 0) {
+                    throw new Error('Total credits cannot be zero');
+                }
+
+                return {
+                    gpa: Math.round((totalPoints / totalCredits) * 100) / 100,
+                    subjects,
+                    gradingSystem: currentGradingSystem,
+                    totalCredits: totalCredits
+                };
+            }
+            // Check auth state and load data
+            window.auth?.onAuthStateChanged((user) => {
+                if (user) {
+                    loadExistingGPA();
+                } else {
+                    window.location.href = '/login';
+                }
+            });
+        });
+    </script>
+    {% include 'partials/firebaseconfig.html' %}
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -124,118 +454,7 @@
 <body class="bg-gray-50 min-h-screen">
 
     <body class="bg-gray-50">
-        <nav class="glass-card nav-white fixed w-full top-0 z-50 shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-20">
-                    <!-- Logo -->
-                    <div class="flex items-center">
-                        <a href="/" class="flex items-center space-x-3 group">
-                            <div class="relative">
-                                <svg class="h-10 w-10 text-blue-600 transform group-hover:scale-110 transition-transform"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 14l9-5-9-5-9 5 9 5z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 14v7" />
-                                </svg>
-                            </div>
-                            <span
-                                class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">UNIVI
-                                AI</span>
-                        </a>
-                    </div>
-
-                    <!-- Desktop Navigation -->
-                    <div class="hidden md:flex items-center space-x-8">
-                        <a href="/unichooser"
-                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                            <span>Find Universities</span>
-                        </a>
-                        <a href="/advisor"
-                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                            </svg>
-                            <span>AI Advisor</span>
-                        </a>
-                        <a href="/loadquiz"
-                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span>Career Quiz</span>
-                        </a>
-                        <a href="/gpa-calculator"
-                            class="nav-link text-gray-700 hover:text-blue-600 font-medium text-lg flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                            <span>GPA Calculator</span>
-                        </a>
-                        <a href="/unichooser"
-                            class="cta-button bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700">
-                            Get Started
-                        </a>
-                    </div>
-
-                    <!-- Mobile Menu Button -->
-                    <div class="md:hidden flex items-center">
-                        <button onclick="toggleMobileMenu()" class="text-gray-700 hover:text-blue-600">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path id="menuIcon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Mobile Menu -->
-                <div id="mobileMenu" class="hidden md:hidden pb-4 bg-white">
-                    <div class="flex flex-col space-y-4">
-                        <a href="/unichooser"
-                            class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                            <span>Find Universities</span>
-                        </a>
-                        <a href="/advisor"
-                            class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                            </svg>
-                            <span>AI Advisor</span>
-                        </a>
-                        <a href="/loadquiz"
-                            class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span>Career Quiz</span>
-                        </a>
-                        <a href="/gpa-calculator"
-                            class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 rounded-lg">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                            <span>GPA Calculator</span>
-                        </a>
-
-                    </div>
-                </div>
-            </div>
-        </nav>
+        {% include 'partials/navigation.html' %}
 
         <!-- Main Content -->
         <div class="pt-32 pb-20">
@@ -373,6 +592,15 @@
                     updateGradeInputs('numeric');
                 }
             }
+            function numericToGPA(grade) {
+                // Convert 2-5 scale to 4.0 scale
+                if (grade < 2 || grade > 5) {
+                    throw new Error('Numeric grades must be between 2.0 and 5.0');
+                }
+
+                // Linear conversion from 2-5 scale to 0-4 scale
+                return ((grade - 2) / 3) * 4;
+            }
 
             function updateGradeInputs(type) {
                 const rows = document.querySelectorAll('.subject-row');
@@ -490,54 +718,139 @@
                 document.getElementById('errorSection').classList.add('hidden');
             }
 
+            // Replace the calculateGPA function with this:
+
             async function calculateGPA() {
-                const rows = document.querySelectorAll('.subject-row');
-                const subjects = [];
-
-                for (const row of rows) {
-                    const name = row.querySelector('input[type="text"]').value;
-                    const grade = row.querySelector('.grade-input').value;
-                    const credits = row.querySelector('input[type="number"]').value;
-
-                    if (!name || !grade || !credits) {
-                        showError('Please fill in all fields for each subject');
-                        return;
-                    }
-
-                    if (currentGradingSystem === 'numeric' && (parseFloat(grade) < 2 || parseFloat(grade) > 5)) {
-                        showError('Numeric grades must be between 2.0 and 5.0');
-                        return;
-                    }
-
-                    subjects.push({
-                        name: name,
-                        grade: grade,
-                        credits: credits
-                    });
-                }
-
                 try {
-                    const response = await fetch('/calculate-gpa', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            subjects: subjects,
-                            gradingSystem: currentGradingSystem
-                        })
+                    const user = window.auth.currentUser;
+                    if (!user) {
+                        throw new Error('Please log in to save your GPA');
+                    }
+
+                    const subjects = [];
+                    let totalPoints = 0;
+                    let totalCredits = 0;
+
+                    // Gather subject data
+                    document.querySelectorAll('.subject-row').forEach(row => {
+                        const subjectName = row.querySelector('input[type="text"]').value;
+                        const credits = parseFloat(row.querySelector('input[type="number"]').value);
+                        const grade = row.querySelector('.grade-input').value;
+
+                        if (!subjectName || isNaN(credits) || !grade) {
+                            throw new Error('Please fill in all fields');
+                        }
+
+                        let gradePoints;
+                        if (currentGradingSystem === 'letter') {
+                            gradePoints = letterToGPA[grade];
+                        } else {
+                            const numericGrade = parseFloat(grade);
+                            if (numericGrade < 2 || numericGrade > 5) {
+                                throw new Error('Numeric grades must be between 2.0 and 5.0');
+                            }
+                            gradePoints = numericToGPA(numericGrade);
+                        }
+
+                        subjects.push({
+                            subjectName,
+                            credits,
+                            grade,
+                            gradePoints // Store the converted GPA value
+                        });
+                        totalPoints += gradePoints * credits;
+                        totalCredits += credits;
                     });
 
-                    const data = await response.json();
-
-                    if (response.ok) {
-                        showResult(data.gpa);
-                    } else {
-                        showError(data.error || 'An error occurred while calculating GPA');
+                    if (totalCredits === 0) {
+                        throw new Error('Total credits cannot be zero');
                     }
+
+                    const gpa = totalPoints / totalCredits;
+                    const roundedGPA = Math.round(gpa * 100) / 100;
+
+                    // Save to Firebase using a batch
+                    const batch = window.db.batch();
+                    const userRef = window.db.collection('users').doc(user.uid);
+                    const gpaDetailsRef = userRef.collection('gpaDetails').doc('latest');
+                    const activityRef = userRef.collection('activity').doc();
+
+                    // Update user document
+                    batch.update(userRef, {
+                        gpa: roundedGPA,
+                        lastGPAUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    // Save GPA details
+                    batch.set(gpaDetailsRef, {
+                        gpa: roundedGPA,
+                        subjects: subjects,
+                        gradingSystem: currentGradingSystem,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        totalCredits: totalCredits
+                    });
+
+                    // Add activity
+                    batch.set(activityRef, {
+                        description: `Updated GPA to ${roundedGPA.toFixed(2)} (${currentGradingSystem} scale)`,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    // Commit all changes
+                    await batch.commit();
+
+                    // Show success message with explanatory text
+                    const resultSection = document.getElementById('resultSection');
+                    if (resultSection) {
+                        const gpaResult = document.getElementById('gpaResult');
+                        const gpaMessage = document.getElementById('gpaMessage');
+
+                        if (gpaResult) gpaResult.textContent = roundedGPA.toFixed(2);
+
+                        if (gpaMessage) {
+                            let message = '';
+                            if (roundedGPA >= 3.5) {
+                                message = "Excellent work! Keep up the outstanding performance!";
+                            } else if (roundedGPA >= 3.0) {
+                                message = "Good job! You're performing well above average!";
+                            } else if (roundedGPA >= 2.5) {
+                                message = "You're doing well! Keep pushing yourself to improve!";
+                            } else {
+                                message = "Keep working hard! Every small improvement counts!";
+                            }
+
+                            if (currentGradingSystem === 'numeric') {
+                                message += " (Converted to 4.0 scale)";
+                            }
+
+                            gpaMessage.textContent = message;
+                        }
+
+                        resultSection.classList.remove('hidden');
+                    }
+
+                    // Hide error section if visible
+                    const errorSection = document.getElementById('errorSection');
+                    if (errorSection) {
+                        errorSection.classList.add('hidden');
+                    }
+
+                    // Redirect after short delay
+                    setTimeout(() => {
+                        window.location.href = '/user';
+                    }, 1500);
+
                 } catch (error) {
-                    showError('Failed to calculate GPA. Please try again.');
-                    console.error('Error:', error);
+                    console.error('Error calculating GPA:', error);
+                    const errorSection = document.getElementById('errorSection');
+                    if (errorSection) {
+                        errorSection.textContent = error.message;
+                        errorSection.classList.remove('hidden');
+                    }
+                    const resultSection = document.getElementById('resultSection');
+                    if (resultSection) {
+                        resultSection.classList.add('hidden');
+                    }
                 }
             }
 

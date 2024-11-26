@@ -141,6 +141,31 @@
                 window.location.href = '/user';
             }
         });
+        db.enablePersistence()
+            .catch((err) => {
+                if (err.code == 'failed-precondition') {
+                    // Multiple tabs open, persistence can only be enabled in one tab at a time
+                    console.log('Persistence failed: Multiple tabs open');
+                } else if (err.code == 'unimplemented') {
+                    // The current browser doesn't support persistence
+                    console.log('Persistence not supported by browser');
+                }
+            });
+
+        // Add error handling for auth state changes
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                console.log('User is signed in');
+            } else {
+                console.log('User is signed out');
+                // Only redirect if we're on a protected page
+                if (window.location.pathname === '/user') {
+                    window.location.href = '/login';
+                }
+            }
+        }, (error) => {
+            console.error('Auth state change error:', error);
+        });
     </script>
 </body>
 
