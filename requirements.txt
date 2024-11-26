@@ -4,4 +4,4 @@ flask
 requests
 gunicorn
 firebase
-firebase_admim
+firebase_admin
