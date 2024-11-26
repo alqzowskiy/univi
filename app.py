@@ -4,12 +4,31 @@ import google.generativeai as genai
 from typing import Dict, List, Union
 import json
 import re
+import firebase
 from functools import wraps
 import logging
 import gunicorn
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 import requests
 from datetime import datetime
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+import firebase_admin
+from firebase_admin import credentials, firestore
+import json
+import os
+
+# Initialize Firebase Admin SDK
+try:
+    # Initialize Firebase Admin SDK if not already initialized
+    if not firebase_admin._apps:
+        cred = credentials.Certificate('servicekey.json')
+        firebase_admin.initialize_app(cred)
+    
+    # Get Firestore database instance
+    db = firestore.client()
+except Exception as e:
+    print(f"Error initializing Firebase: {str(e)}")
+    db = None
 
 class ResponseFormatter:
     def __init__(self):
@@ -845,7 +864,180 @@ def calculate_gpa():
     except Exception as e:
         app.logger.error(f'Error calculating GPA: {str(e)}')
         return jsonify({'error': 'An error occurred while calculating GPA'}), 500
+
+
+@app.route('/career-advisor')
+def career_advisor():
+    """Render the simplified career advisor input page"""
+    return render_template('career_advisor.html')
+
+@app.route('/analyze-career', methods=['POST'])
+def analyze_career():
+    """Analyze the career path and generate recommendations"""
+    profession = request.form.get('profession')
     
+    if not profession:
+        return redirect(url_for('career_advisor'))
+        
+    try:
+        # Career analysis prompt for Gemini
+        prompt = f"""
+        Analyze the career path for {profession} and provide detailed information in this exact JSON format:
+        {{
+            "career_path": {{
+                "title": "{profession}",
+                "description": "Detailed 2-3 sentence description of the career",
+                "future_prospects": "2-3 sentences about future opportunities and industry outlook"
+            }},
+            "required_skills": [
+                {{
+                    "category": "Technical Skills",
+                    "skills": ["skill1", "skill2", "skill3"],
+                    "importance": "Why these technical skills matter for this role"
+                }},
+                {{
+                    "category": "Soft Skills",
+                    "skills": ["skill1", "skill2", "skill3"],
+                    "importance": "Why these soft skills are crucial for success"
+                }},
+                {{
+                    "category": "Industry Knowledge",
+                    "skills": ["skill1", "skill2", "skill3"],
+                    "importance": "Why understanding these areas matters"
+                }}
+            ],
+            "recommended_books": [
+                {{
+                    "title": "Book title",
+                    "author": "Author name",
+                    "description": "Why this book is valuable for this career",
+                    "key_takeaways": ["key point 1", "key point 2", "key point 3"]
+                }},
+                {{
+                    "title": "Book title",
+                    "author": "Author name",
+                    "description": "Why this book is valuable for this career",
+                    "key_takeaways": ["key point 1", "key point 2", "key point 3"]
+                }}
+            ],
+            "education_path": {{
+                "degree_requirements": "Required education level and common degrees",
+                "relevant_fields": ["field1", "field2", "field3"],
+                "specializations": ["specialization1", "specialization2", "specialization3"]
+            }},
+            "university_criteria": {{
+                "recommended_programs": ["program1", "program2", "program3"],
+                "key_courses": ["course1", "course2", "course3"],
+                "suggested_country": "Best country for studying this field"
+            }}
+        }}
+        
+        IMPORTANT GUIDELINES:
+        1. Provide SPECIFIC, ACTIONABLE information
+        2. Focus on current industry standards and requirements
+        3. Include both entry-level and advanced skills
+        4. Recommend modern, highly-rated books
+        5. Suggest concrete specializations and courses
+        6. Be realistic about education requirements
+        7. Consider global study opportunities
+        """
+        
+        # Get career analysis from Gemini
+        response = recommender.model.generate_content(prompt)
+        
+        if not response.text:
+            raise ValueError("No response received from AI model")
+            
+        # Clean and parse the response
+        cleaned_text = response.text.strip()
+        if cleaned_text.startswith("```json"):
+            cleaned_text = cleaned_text[7:]
+        if cleaned_text.endswith("```"):
+            cleaned_text = cleaned_text[:-3]
+            
+        analysis = json.loads(cleaned_text)
+        
+        # Store university search criteria in session
+        session['university_search'] = {
+            'programs': analysis['university_criteria']['recommended_programs'],
+            'country': analysis['university_criteria']['suggested_country']
+        }
+        
+        # Create activity record if user is logged in
+        if 'firebase_auth' in request.cookies:
+            try:
+                # Get user ID from Firebase auth
+                auth_cookie = request.cookies.get('firebase_auth')
+                user_id = json.loads(auth_cookie)['user_id']
+                
+                # Add activity to user's record
+                db.collection('users').document(user_id).collection('activity').add({
+                    'type': 'career_analysis',
+                    'profession': profession,
+                    'timestamp': firebase.firestore.FieldValue.serverTimestamp(),
+                    'description': f'Analyzed career path for {profession}'
+                })
+                
+                # Update user's career interests
+                db.collection('users').document(user_id).set({
+                    'last_career_search': profession,
+                    'career_interests': firebase.firestore.ArrayUnion([profession])
+                }, merge=True)
+                
+            except Exception as e:
+                app.logger.error(f"Error saving user activity: {str(e)}")
+                # Continue even if activity logging fails
+        
+        return render_template(
+            'career_path.html',
+            analysis=analysis,
+            profession=profession
+        )
+        
+    except json.JSONDecodeError as e:
+        app.logger.error(f"JSON parsing error: {str(e)}\nResponse text: {cleaned_text}")
+        return render_template(
+            'career_advisor.html',
+            error="Sorry, we had trouble processing the career analysis. Please try again."
+        )
+        
+    except Exception as e:
+        app.logger.error(f"Error in career analysis: {str(e)}")
+        return render_template(
+            'career_advisor.html',
+            error="An error occurred while analyzing the career path. Please try again."
+        )
+
+@app.route('/find-universities', methods=['POST'])
+def find_universities():
+    """Redirect to university search with career-based criteria"""
+    if 'university_search' not in session:
+        return redirect(url_for('career_advisor'))
+        
+    search_criteria = session['university_search']
+    
+    # Log search if user is logged in
+    if 'firebase_auth' in request.cookies:
+        try:
+            auth_cookie = request.cookies.get('firebase_auth')
+            user_id = json.loads(auth_cookie)['user_id']
+            
+            db.collection('users').document(user_id).collection('activity').add({
+                'type': 'university_search',
+                'criteria': search_criteria,
+                'timestamp': firebase.firestore.FieldValue.serverTimestamp(),
+                'description': f'Searched universities for {search_criteria["programs"][0]}'
+            })
+        except Exception as e:
+            app.logger.error(f"Error logging university search: {str(e)}")
+    
+    return redirect(url_for(
+        'unichooser',
+        faculty=search_criteria['programs'][0],
+        country=search_criteria['country']
+    ))
+
+
 @app.route('/apply-recommendations', methods=['POST'])
 def apply_recommendations():
     """Apply career recommendations to university search"""
