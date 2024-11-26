@@ -4,6 +4,7 @@ import google.generativeai as genai
 from typing import Dict, List, Union
 import json
 import re
+from functools import wraps
 import logging
 import gunicorn
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
@@ -565,13 +566,44 @@ app = Flask(__name__)
 app.secret_key = "dev_secret_key_123"
 logging.basicConfig(level=logging.INFO)
 
-# Initialize recommender and formatter
+# Инициализация сервисов
 recommender = UniversityRecommender()
 response_formatter = ResponseFormatter()
 
+# # Декоратор для проверки аутентификации
+# def login_required(f):
+#     @wraps(f)
+#     def decorated_function(*args, **kwargs):
+#         auth_cookie = request.cookies.get('firebase_auth')
+#         if not auth_cookie:
+#             return redirect(url_for('login', next=request.url))
+#         return f(*args, **kwargs)
+#     return decorated_function
+
+@app.route('/login')
+def login():
+    # Если пользователь уже аутентифицирован, перенаправляем на главную
+    auth_cookie = request.cookies.get('firebase_auth')
+    if auth_cookie:
+        return redirect(url_for('index'))
+    return render_template('login.html')
+
+@app.route('/register')
+def register():
+    # Если пользователь уже аутентифицирован, перенаправляем на главную
+    auth_cookie = request.cookies.get('firebase_auth')
+    if auth_cookie:
+        return redirect(url_for('index'))
+    return render_template('register.html')
+
+@app.route('/user')
+# @login_required
+def user_profile():
+    return render_template('user.html')
+
 @app.route('/')
 def index():
-    return render_template("mainpage.html")
+    return render_template('mainpage.html')
 
 @app.route('/advisor')
 def advisor():
