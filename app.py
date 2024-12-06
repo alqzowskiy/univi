@@ -111,7 +111,7 @@ class ResponseFormatter:
             for i, section in enumerate(sections):
                 formatted_section = self.preserve_formatting(section)
                 if i == 0:
-                    formatted_sections.append(f"**🎓 Overview:**\n{formatted_section}")
+                    formatted_sections.append(f"**UNIVI AI**\n{formatted_section}")
                 elif "resource" in section.lower():
                     formatted_sections.append(f"**📚 Resources:**\n{formatted_section}")
                 elif any(word in section.lower() for word in ["tip", "advice", "suggestion"]):
@@ -583,7 +583,6 @@ class UniversityRecommender:
 app = Flask(__name__)
 app.secret_key = "dev_secret_key_123"
 logging.basicConfig(level=logging.INFO)
-
 # Инициализация сервисов
 recommender = UniversityRecommender()
 response_formatter = ResponseFormatter()
