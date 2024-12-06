@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Cost Calculator - UNIVI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+</head>
+
+<body class="bg-gray-50">
+    {% include 'partials/navigation.html' %}
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header Section -->
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">University Cost Calculator</h1>
+                <p class="text-gray-600">Plan your education budget with detailed cost breakdowns</p>
+            </div>
+
+            <!-- Calculator Form -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <form id="costCalculatorForm" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="university" class="block text-sm font-medium text-gray-700 mb-1">University
+                                Name</label>
+                            <input type="text" id="university" name="university" required
+                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                            <input type="text" id="country" name="country" required
+                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                    <button type="submit"
+                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+                        Calculate Costs
+                    </button>
+                </form>
+            </div>
+
+            <!-- Results Section (Initially Hidden) -->
+            <div id="resultsSection" class="hidden space-y-8">
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-blue-50 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-blue-800 mb-2">Monthly Expenses</h3>
+                        <p id="monthlyTotal" class="text-2xl font-bold text-blue-600"></p>
+                        <p class="text-sm text-blue-600 mt-1">Average recurring costs</p>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-green-800 mb-2">Yearly Total</h3>
+                        <p id="yearlyTotal" class="text-2xl font-bold text-green-600"></p>
+                        <p class="text-sm text-green-600 mt-1">Including tuition and fees</p>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-purple-800 mb-2">First Year Total</h3>
+                        <p id="firstYearTotal" class="text-2xl font-bold text-purple-600"></p>
+                        <p class="text-sm text-purple-600 mt-1">Including one-time costs</p>
+                    </div>
+                </div>
+
+                <!-- Detailed Breakdown -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-bold mb-4">Detailed Cost Breakdown</h2>
+
+                    <!-- Monthly Costs -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Monthly Expenses</h3>
+                        <div id="monthlyCosts" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    </div>
+
+                    <!-- Yearly Costs -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Yearly Expenses</h3>
+                        <div id="yearlyCosts" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    </div>
+
+                    <!-- One-time Costs -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">One-time Expenses</h3>
+                        <div id="oneTimeCosts" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    </div>
+
+                    <!-- Cost Distribution Chart -->
+                    <div class="mt-8">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Cost Distribution</h3>
+                        <canvas id="costChart" class="w-full max-w-2xl mx-auto"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let costChart = null;
+
+        document.getElementById('costCalculatorForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+
+            try {
+                const response = await fetch('/calculate-costs', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                // Show results section
+                document.getElementById('resultsSection').classList.remove('hidden');
+
+                // Update totals
+                document.getElementById('monthlyTotal').textContent = formatCurrency(calculateMonthlyTotal(data.monthly_costs));
+                document.getElementById('yearlyTotal').textContent = formatCurrency(calculateYearlyTotal(data.yearly_costs));
+                document.getElementById('firstYearTotal').textContent = formatCurrency(data.estimated_total.first_year);
+
+                // Update detailed breakdowns
+                updateCostSection('monthlyCosts', data.monthly_costs);
+                updateCostSection('yearlyCosts', data.yearly_costs);
+                updateCostSection('oneTimeCosts', data.one_time_costs);
+
+                // Update chart
+                updateCostChart(data);
+
+            } catch (error) {
+                console.error(error);
+                alert('Error calculating costs. Please try again.');
+            }
+        });
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(amount);
+        }
+
+        function calculateMonthlyTotal(costs) {
+            return Object.values(costs).reduce((total, cost) => total + parseFloat(cost.amount), 0);
+        }
+
+        function calculateYearlyTotal(costs) {
+            return Object.values(costs).reduce((total, cost) => total + parseFloat(cost.amount), 0);
+        }
+
+        function updateCostSection(elementId, costs) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = '';
+
+            Object.entries(costs).forEach(([key, value]) => {
+                const div = document.createElement('div');
+                div.className = 'bg-gray-50 rounded-lg p-4';
+                div.innerHTML = `
+                    <h4 class="font-medium text-gray-900 capitalize">${key}</h4>
+                    <p class="text-2xl font-bold text-gray-900 mb-1">${formatCurrency(value.amount)}</p>
+                    <p class="text-sm text-gray-600">${value.details}</p>
+                `;
+                element.appendChild(div);
+            });
+        }
+
+        function updateCostChart(data) {
+            const ctx = document.getElementById('costChart').getContext('2d');
+
+            if (costChart) {
+                costChart.destroy();
+            }
+
+            const monthlyTotal = calculateMonthlyTotal(data.monthly_costs) * 12;
+            const yearlyTotal = calculateYearlyTotal(data.yearly_costs);
+            const oneTimeTotal = Object.values(data.one_time_costs)
+                .reduce((total, cost) => total + parseFloat(cost.amount), 0);
+
+            costChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Monthly Expenses (Yearly)', 'Yearly Costs', 'One-time Costs'],
+                    datasets: [{
+                        data: [monthlyTotal, yearlyTotal, oneTimeTotal],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.5)',
+                            'rgba(16, 185, 129, 0.5)',
+                            'rgba(139, 92, 246, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgb(59, 130, 246)',
+                            'rgb(16, 185, 129)',
+                            'rgb(139, 92, 246)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

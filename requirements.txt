@@ -5,3 +5,5 @@ requests
 gunicorn
 firebase
 firebase_admin
+bs4
+pandas
