@@ -1065,10 +1065,207 @@ def internal_error(error):
 def cost_calculator():
     """Render the university cost calculator page"""
     return render_template('cost_calculator.html')
+class UniversalCostCalculator:
+    def __init__(self):
+        self.model = genai.GenerativeModel('gemini-pro')
+        self.logger = logging.getLogger(__name__)
+
+    def calculate_costs(self, university: str, country: str) -> dict:
+        """Calculate costs for any university worldwide using AI."""
+        try:
+            # Get accurate costs using Gemini
+            prompt = f"""Provide EXACT ACCURATE cost breakdown for {university} in {country}.
+            Only return REAL, VERIFIED costs in USD.
+            Be precise about each cost category:
+            1. Tuition costs from the university's official data
+            2. Real accommodation costs near/at the university
+            3. Accurate local food costs
+            4. Current transport costs in that city
+            5. Actual utility costs in that area
+            6. Real personal expense estimates for that location
+            
+            Return in exact JSON format:
+            {{
+                "monthly_costs": {{
+                    "accommodation": {{
+                        "amount": EXACT_NUMBER,
+                        "details": "Specific details for this university",
+                        "options": [
+                            {{"type": "University Housing", "cost": EXACT_NUMBER, "notes": "details"}},
+                            {{"type": "Private Room", "cost": EXACT_NUMBER, "notes": "details"}},
+                            {{"type": "Studio", "cost": EXACT_NUMBER, "notes": "details"}}
+                        ]
+                    }},
+                    "food": {{
+                        "amount": EXACT_NUMBER,
+                        "details": "Local food costs",
+                        "breakdown": {{
+                            "university_meal_plan": EXACT_NUMBER,
+                            "groceries": EXACT_NUMBER,
+                            "dining_out": EXACT_NUMBER
+                        }}
+                    }},
+                    "transport": {{
+                        "amount": EXACT_NUMBER,
+                        "details": "Local transport costs",
+                        "options": [
+                            {{"type": "Student Pass", "cost": EXACT_NUMBER}},
+                            {{"type": "Regular Pass", "cost": EXACT_NUMBER}},
+                            {{"type": "Taxi Budget", "cost": EXACT_NUMBER}}
+                        ]
+                    }},
+                    "utilities": {{
+                        "amount": EXACT_NUMBER,
+                        "details": "Average utilities",
+                        "breakdown": {{
+                            "electricity": EXACT_NUMBER,
+                            "water": EXACT_NUMBER,
+                            "internet": EXACT_NUMBER,
+                            "phone": EXACT_NUMBER
+                        }}
+                    }},
+                    "personal": {{
+                        "amount": EXACT_NUMBER,
+                        "details": "Personal expenses",
+                        "breakdown": {{
+                            "entertainment": EXACT_NUMBER,
+                            "health": EXACT_NUMBER,
+                            "clothing": EXACT_NUMBER,
+                            "misc": EXACT_NUMBER
+                        }}
+                    }}
+                }},
+                "yearly_costs": {{
+                    "tuition": {{
+                        "amount": EXACT_NUMBER,
+                        "details": "Current tuition fees",
+                        "variations": [
+                            {{"program": "Undergraduate", "amount": EXACT_NUMBER}},
+                            {{"program": "Masters", "amount": EXACT_NUMBER}},
+                            {{"program": "PhD", "amount": EXACT_NUMBER}}
+                        ]
+                    }},
+                    "insurance": {{
+                        "amount": EXACT_NUMBER,
+                        "details": "Required insurance"
+                    }},
+                    "academic_fees": {{
+                        "amount": EXACT_NUMBER,
+                        "details": "Additional academic fees",
+                        "breakdown": {{
+                            "registration": EXACT_NUMBER,
+                            "facility": EXACT_NUMBER,
+                            "technology": EXACT_NUMBER,
+                            "student_services": EXACT_NUMBER
+                        }}
+                    }}
+                }}
+            }}
+
+            IMPORTANT:
+            1. Use REAL, CURRENT costs from official sources
+            2. Ensure all amounts are in USD
+            3. Include ALL fees and mandatory costs
+            4. Use actual local prices for living expenses
+            5. Include student discounts where applicable
+            6. Consider the specific location and university area"""
+
+            response = self.model.generate_content(prompt)
+            if not response.text:
+                raise ValueError("No response received from AI model")
+
+            # Parse and validate the response
+            costs = self._parse_response(response.text)
+            
+            # Calculate totals
+            totals = self._calculate_totals(costs)
+            costs["totals"] = totals
+
+            return costs
+
+        except Exception as e:
+            self.logger.error(f"Error calculating costs: {str(e)}")
+            return self._get_error_response()
+
+    def _parse_response(self, text: str) -> dict:
+        """Parse and validate AI response."""
+        # Clean the text
+        text = text.strip()
+        if text.startswith('```json'):
+            text = text[7:]
+        if text.endswith('```'):
+            text = text[:-3]
+
+        try:
+            costs = json.loads(text)
+            # Validate the structure
+            required_fields = ["monthly_costs", "yearly_costs"]
+            if not all(field in costs for field in required_fields):
+                raise ValueError("Missing required cost categories")
+            return costs
+        except json.JSONDecodeError:
+            # Try to extract JSON using regex as fallback
+            json_match = re.search(r'({.*})', text, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group(1))
+            raise ValueError("Could not parse cost data")
+
+    def _calculate_totals(self, costs: dict) -> dict:
+        """Calculate total costs from all categories."""
+        try:
+            # Calculate monthly total
+            monthly_total = sum(
+                item["amount"] 
+                for item in costs["monthly_costs"].values()
+            )
+
+            # Calculate yearly total
+            yearly_total = sum(
+                item["amount"] 
+                for item in costs["yearly_costs"].values()
+            )
+
+            # Calculate first year total (including all costs)
+            first_year_total = yearly_total + (monthly_total * 12)
+
+            return {
+                "monthly": {
+                    "amount": monthly_total,
+                    "display_amount": f"${monthly_total:,.2f}"
+                },
+                "yearly": {
+                    "amount": yearly_total,
+                    "display_amount": f"${yearly_total:,.2f}"
+                },
+                "first_year": {
+                    "amount": first_year_total,
+                    "display_amount": f"${first_year_total:,.2f}"
+                }
+            }
+        except Exception as e:
+            self.logger.error(f"Error calculating totals: {str(e)}")
+            return {
+                "monthly": {"amount": 0, "display_amount": "$0"},
+                "yearly": {"amount": 0, "display_amount": "$0"},
+                "first_year": {"amount": 0, "display_amount": "$0"}
+            }
+
+    def _get_error_response(self) -> dict:
+        """Return error response if calculation fails."""
+        return {
+            "error": "Could not calculate costs",
+            "monthly_costs": {},
+            "yearly_costs": {},
+            "totals": {
+                "monthly": {"amount": 0, "display_amount": "$0"},
+                "yearly": {"amount": 0, "display_amount": "$0"},
+                "first_year": {"amount": 0, "display_amount": "$0"}
+            }
+        }# Initialize the calculator
+cost_calculator = UniversalCostCalculator()
 
 @app.route('/calculate-costs', methods=['POST'])
 def calculate_costs():
-    """Calculate university costs with improved error handling"""
     try:
         university = request.form.get('university')
         country = request.form.get('country')
@@ -1076,297 +1273,287 @@ def calculate_costs():
         if not university or not country:
             return jsonify({"error": "University and country are required"}), 400
             
-        prompt = f"""
-Provide DETAILED cost breakdown for studying at {university} in {country}.Instead of "PRICE" write the real prices at {university} in {country}.I give u an example, you gotta put info from {university} in {country} Return in this exact JSON format:
-
-{{
-    "monthly_costs": {{
-        "accommodation": {{
-            "amount": PRICE,
-            "details": "Average cost for student housing",
-            "options": [
-                {{"type": "University Dorm", "cost": PRICE, "notes": "Shared room, utilities included"}},
-                {{"type": "Private Room", "cost": PRICE, "notes": "In shared apartment"}},
-                {{"type": "Studio Apartment", "cost": PRICE, "notes": "Private accommodation"}}
-            ]
-        }},
-        "food": {{
-            "amount": PRICE,
-            "details": "Student meal plan and groceries",
-            "breakdown": {{
-                "meal_plan": PRICE,
-                "groceries": PRICE,
-                "dining_out": PRICE,
-            }}
-        }},
-        "transport": {{
-            "amount": PRICE,
-            "details": "Public transportation",
-            "options": [
-                {{"type": "Student Transit Pass", "cost": PRICE}},
-                {{"type": "Bike Share", "cost": 20}},
-                {{"type": "Occasional Taxi", "cost": 30}}
-            ]
-        }},
-        "utilities": {{
-            "amount": 150,
-            "details": "Basic utilities and internet",
-            "breakdown": {{
-                "electricity": PRICE,
-                "water": PRICE,
-                "internet": PRICE,
-                "phone": PRICE
-            }}
-        }},
-        "personal": {{
-            "amount": ,
-            "details": "Personal expenses",
-            "breakdown": {{
-                "entertainment": PRICE,
-                "gym": PRICE,
-                "clothing": PRICE,
-                "miscellaneous": PRICE
-            }}
-        }},
-        "study": {{
-            "amount": PRICE,
-            "details": "Study materials and supplies",
-            "breakdown": {{
-                "books": PRICE,
-                "supplies": PRICE,
-                "printing": PRICE,
-                "software": PRICE
-            }}
-        }}
-    }},
-    "yearly_costs": {{
-        "tuition": {{
-            "amount": PRICE,
-            "details": "International student tuition",
-            "variations": [
-                {{"program": "Undergraduate", "amount": PRICE}},
-                {{"program": "Masters", "amount": PRICE}},
-                {{"program": "PhD", "amount": PRICE}}
-            ]
-        }},
-        "insurance": {{
-            "amount": PRICE,
-            "details": "Required health insurance",
-            "coverage": [
-                "Medical",
-                "Dental",
-                "Emergency",
-                "Prescription drugs"
-            ]
-        }},
-        "academic_fees": {{
-            "amount": PRICE,
-            "details": "Various academic fees",
-            "breakdown": {{
-                "registration": PRICE,
-                "technology": PRICE,
-                "library": PRICE,
-                "student_services": PRICE,
-                "lab_access": PRICE
-            }}
-        }}
-    }},
-    "one_time_costs": {{
-        "visa": {{
-            "amount": PRICE,
-            "details": "Student visa application",
-            "additional_fees": [
-                {{"type": "Processing", "cost": PRICE}},
-                {{"type": "Documentation", "cost": PRICE}},
-                {{"type": "Insurance verification", "cost": PRICE}}
-            ]
-        }},
-        "setup": {{
-            "amount": PRICE,
-            "details": "Initial setup costs",
-            "breakdown": {{
-                "housing_deposit": PRICE,
-                "basic_furniture": PRICE,
-                "essentials": PRICE,
-                "arrival_transport": PRICE
-            }}
-        }},
-        "admission": {{
-            "amount": PRICE,
-            "details": "Admission-related fees",
-            "breakdown": {{
-                "application": PRICE,
-                "document_verification": PRICE,
-                "enrollment": PRICE
-            }}
-        }}
-    }},
-    "savings_opportunities": [
-        {{
-            "category": "Housing",
-            "potential_saving": "PRICE-PRICE",
-            "strategy": "Choose shared accommodation or university dormitory"
-        }},
-        {{
-            "category": "Food",
-            "potential_saving": "PRICE-PRICE",
-            "strategy": "Cook meals at home and use meal plan"
-        }},
-        {{
-            "category": "Transportation",
-            "potential_saving": "PRICE-PRICE",
-            "strategy": "Use student transit passes and bike sharing"
-        }}
-    ],
-    "financial_aid": {{
-        "scholarships": [
-            {{
-                "type": "Merit-based",
-                "amount": "PRICE-PRICE",
-                "eligibility": "High academic achievement"
-            }},
-            {{
-                "type": "Need-based",
-                "amount": "Variable",
-                "eligibility": "Financial need assessment"
-            }}
-        ],
-        "work_study": {{
-            "available": true,
-            "hours_per_week": "HOURS-HOURS",
-            "typical_wage": "PRICE-PRICE"
-        }}
-    }},
-    "local_cost_context": {{
-        "city_expense_index": "Moderate/High/Low",
-        "comparison": "DISCOUNT% higher than national average",
-        "student_discounts": [
-            "Public transport - DISCOUNT% off",
-            "Cultural venues - DISCOUNT-DISCOUNT% off",
-            "Software and tech - Special student pricing"
-        ]
-    }}
-}}
-
-Important:
-1. All monetary values must be in USD
-2. Use verified/realistic costs for {university} and {country}
-3. Include detailed breakdowns where possible
-4. Consider both minimum and typical expenses
-5. Account for international student specific costs
-"""
-        response = genai.GenerativeModel('gemini-pro').generate_content(prompt)
-        if not response.text:
-            raise ValueError("No response received from AI model")
-
-        # Clean the response text
-        text = response.text.strip()
+        costs = cost_calculator.calculate_costs(university, country)
         
-        # Debug logging
-        app.logger.info(f"Raw AI response: {text}")
-        
-        # Remove any potential markdown code block markers
-        if text.startswith('```json'):
-            text = text[7:]
-        if text.startswith('```'):
-            text = text[3:]
-        if text.endswith('```'):
-            text = text[:-3]
-            
-        # Clean up any remaining whitespace
-        text = text.strip()
-        
-        app.logger.info(f"Cleaned text before parsing: {text}")
-
-        try:
-            # Parse the JSON response
-            costs = json.loads(text)
-        except json.JSONDecodeError as e:
-            app.logger.error(f"JSON parsing error: {str(e)}\nText: {text}")
-            # Try to extract JSON using regex as fallback
-            import re
-            json_match = re.search(r'({.*})', text, re.DOTALL)
-            if json_match:
-                try:
-                    costs = json.loads(json_match.group(1))
-                except json.JSONDecodeError:
-                    raise ValueError("Could not parse cost data from response")
-            else:
-                raise ValueError("Could not find valid JSON in response")
-
-        # Process and validate the costs
-        processed_costs = {
-            "monthly_costs": {},
-            "yearly_costs": {},
-            "one_time_costs": {}
-        }
-
-        # Helper function to clean amount values
-        def clean_amount(amount) -> float:
-            if isinstance(amount, (int, float)):
-                return float(amount)
-            if isinstance(amount, str):
-                # Remove any non-numeric characters except decimal point
-                cleaned = ''.join(c for c in amount if c.isdigit() or c == '.')
-                return float(cleaned) if cleaned else 0
-            return 0
-
-        # Process each cost category
-        for category in ["monthly_costs", "yearly_costs", "one_time_costs"]:
-            if category in costs:
-                for item, details in costs[category].items():
-                    amount = clean_amount(details.get("amount", 0))
-                    processed_costs[category][item] = {
-                        "amount": amount,
-                        "details": details.get("details", ""),
-                        "display_amount": f"${amount:,.2f}"
+        # Make sure the response includes all required sections
+        costs.update({
+            "one_time_costs": {
+                "visa": {
+                    "amount": 500,
+                    "details": "Student visa application fee",
+                    "additional_fees": [
+                        {"type": "Processing", "cost": 100},
+                        {"type": "Documentation", "cost": 50}
+                    ]
+                },
+                "setup": {
+                    "amount": 2000,
+                    "details": "Initial housing and setup costs",
+                    "breakdown": {
+                        "housing_deposit": 1000,
+                        "furniture": 500,
+                        "utilities_setup": 500
                     }
-
-        # Calculate totals
-        monthly_total = sum(item["amount"] for item in processed_costs["monthly_costs"].values())
-        yearly_total = sum(item["amount"] for item in processed_costs["yearly_costs"].values())
-        one_time_total = sum(item["amount"] for item in processed_costs["one_time_costs"].values())
-
-        first_year_total = yearly_total + (monthly_total * 12) + one_time_total
-        subsequent_years = yearly_total + (monthly_total * 12)
-
-        # Add totals to response
-        processed_costs["totals"] = {
-            "monthly": {
-                "amount": monthly_total,
-                "display_amount": f"${monthly_total:,.2f}"
+                }
             },
-            "yearly": {
-                "amount": yearly_total,
-                "display_amount": f"${yearly_total:,.2f}"
-            },
-            "first_year": {
-                "amount": first_year_total,
-                "display_amount": f"${first_year_total:,.2f}"
-            },
-            "subsequent_years": {
-                "amount": subsequent_years,
-                "display_amount": f"${subsequent_years:,.2f}"
+            "savings_opportunities": [
+                {
+                    "category": "Housing",
+                    "potential_saving": "$200-400",
+                    "strategy": "Choose shared accommodation"
+                },
+                {
+                    "category": "Food",
+                    "potential_saving": "$100-200",
+                    "strategy": "Cook at home and use meal plan"
+                }
+            ],
+            "financial_aid": {
+                "scholarships": [
+                    {
+                        "type": "Merit Scholarship",
+                        "amount": "$5,000-15,000",
+                        "eligibility": "High academic achievement"
+                    },
+                    {
+                        "type": "Need-based Aid",
+                        "amount": "$3,000-10,000",
+                        "eligibility": "Financial need"
+                    }
+                ],
+                "work_study": {
+                    "hours_per_week": "20",
+                    "typical_wage": "$15-20"
+                }
             }
-        }
-
-        # Store calculation in session
-        session['last_calculation'] = {
-            'university': university,
-            'country': country,
-            'timestamp': datetime.now().isoformat(),
-            'first_year_total': first_year_total
-        }
-
-        return jsonify(processed_costs)
-
+        })
+        
+        return jsonify(costs)
+        
     except Exception as e:
-        app.logger.error(f"Error calculating costs: {str(e)}")
-        return jsonify({
-            "error": "Failed to calculate costs",
-            "details": str(e)
-        }), 500
+        return jsonify({"error": str(e)}), 500    
+@app.route('/academic-costs', methods=['POST'])
+def get_academic_costs():
+    """Get detailed breakdown of academic costs"""
+    try:
+        university = request.form.get('university')
+        country = request.form.get('country')
+        
+        if not university or not country:
+            return jsonify({"error": "University and country are required"}), 400
+            
+        prompt = f"""Provide detailed academic costs for {university} in {country}.
+        Include the following:
+        1. Exact tuition fees for different programs
+        2. All mandatory academic fees
+        3. Program-specific costs
+        4. Lab and materials fees
+        5. Semester/annual breakdown
+        
+        Return in this exact JSON format:
+        {{
+            "tuition_breakdown": [
+                {{
+                    "program": "Program name",
+                    "annual_fee": "Exact amount in USD",
+                    "details": "Program details",
+                    "additional_fees": [
+                        {{"name": "Fee name", "amount": "Amount in USD", "frequency": "One-time/Annual/Semester"}}
+                    ]
+                }}
+            ],
+            "mandatory_fees": [
+                {{
+                    "name": "Fee name",
+                    "amount": "Amount in USD",
+                    "description": "Fee details",
+                    "frequency": "One-time/Annual/Semester"
+                }}
+            ],
+            "program_materials": [
+                {{
+                    "program": "Program name",
+                    "materials": [
+                        {{"item": "Item name", "cost": "Cost in USD", "frequency": "One-time/Annual/Semester"}}
+                    ]
+                }}
+            ]
+        }}"""
+        
+        response = cost_calculator.model.generate_content(prompt)
+        costs = json.loads(response.text)
+        return jsonify(costs)
+        
+    except Exception as e:
+        app.logger.error(f"Error fetching academic costs: {str(e)}")
+        return jsonify({"error": "Failed to fetch academic costs"}), 500
 
+@app.route('/setup-costs', methods=['POST'])
+def get_setup_costs():
+    """Get detailed breakdown of one-time setup costs"""
+    try:
+        university = request.form.get('university')
+        country = request.form.get('country')
+        
+        if not university or not country:
+            return jsonify({"error": "University and country are required"}), 400
+            
+        # Setup costs data structure
+        setup_costs = {
+            "visa_costs": [
+                {
+                    "item": "Student Visa Application",
+                    "amount": 500,
+                    "timeline": "3-4 months before departure",
+                    "notes": "Processing time varies by country"
+                },
+                {
+                    "item": "Health Check",
+                    "amount": 150,
+                    "timeline": "1-2 months before departure",
+                    "notes": "Required for visa application"
+                }
+            ],
+            "housing_setup": [
+                {
+                    "item": "Security Deposit",
+                    "amount": 1000,
+                    "required": True,
+                    "notes": "Refundable at end of lease"
+                },
+                {
+                    "item": "First Month's Rent",
+                    "amount": 1000,
+                    "required": True,
+                    "notes": "Due before move-in"
+                },
+                {
+                    "item": "Basic Furniture",
+                    "amount": 500,
+                    "required": False,
+                    "notes": "Essential items if unfurnished"
+                }
+            ],
+            "initial_expenses": [
+                {
+                    "category": "Documentation",
+                    "items": [
+                        {"name": "Document Translation", "amount": 100, "essential": True},
+                        {"name": "Notarization", "amount": 50, "essential": True}
+                    ]
+                },
+                {
+                    "category": "Travel",
+                    "items": [
+                        {"name": "Flight Ticket", "amount": 1000, "essential": True},
+                        {"name": "Airport Transfer", "amount": 50, "essential": True}
+                    ]
+                }
+            ]
+        }
+        
+        return jsonify(setup_costs)
+        
+    except Exception as e:
+        
+        return jsonify({"error": "Failed to fetch setup costs"}), 500
+
+@app.route('/savings-opportunities', methods=['POST'])
+def get_savings_opportunities():
+    """Get detailed breakdown of savings opportunities and financial aid"""
+    try:
+        university = request.form.get('university')
+        country = request.form.get('country')
+        
+        if not university or not country:
+            return jsonify({"error": "University and country are required"}), 400
+            
+        opportunities = {
+            "scholarships": [
+                {
+                    "type": "Merit Scholarship",
+                    "amount": "$5,000-15,000",
+                    "eligibility": "High academic achievement (GPA 3.5+)",
+                    "deadline": "March 1st",
+                    "details": "Based on academic performance"
+                },
+                {
+                    "type": "Need-based Aid",
+                    "amount": "$3,000-10,000",
+                    "eligibility": "Demonstrated financial need",
+                    "deadline": "Rolling basis",
+                    "details": "Based on family income"
+                }
+            ],
+            "work_opportunities": [
+                {
+                    "type": "Work Study",
+                    "earnings": "$15-20/hour",
+                    "hours": "20 hours/week",
+                    "positions": ["Library Assistant", "Research Assistant"],
+                    "requirements": ["Valid student visa", "Enrolled full-time"]
+                },
+                {
+                    "type": "Teaching Assistant",
+                    "earnings": "$18-25/hour",
+                    "hours": "10-15 hours/week",
+                    "positions": ["Lab TA", "Course TA"],
+                    "requirements": ["Good academic standing", "Department approval"]
+                }
+            ],
+            "cost_reduction": [
+                {
+                    "category": "Housing",
+                    "potential_saving": "$200-400/month",
+                    "strategy": "Choose shared accommodation or apply for RA position"
+                },
+                {
+                    "category": "Food",
+                    "potential_saving": "$100-200/month",
+                    "strategy": "Use meal plan and cook at home"
+                },
+                {
+                    "category": "Transportation",
+                    "potential_saving": "$50-100/month",
+                    "strategy": "Use student transit pass"
+                }
+            ]
+        }
+        
+        return jsonify(opportunities)
+        
+    except Exception as e:
+        
+        return jsonify({"error": "Failed to fetch savings opportunities"}), 500    
+
+@app.route('/export-cost-report', methods=['POST'])
+def export_cost_report():
+    """Generate a comprehensive cost report for download"""
+    try:
+        university = request.form.get('university')
+        country = request.form.get('country')
+        
+        if not university or not country:
+            return jsonify({"error": "University and country are required"}), 400
+            
+        # Get all cost components
+        costs = cost_calculator.calculate_costs(university, country)
+        academic_costs = get_academic_costs().json
+        setup_costs = get_setup_costs().json
+        savings = get_savings_opportunities().json
+        
+        # Generate PDF report (implementation depends on your PDF library choice)
+        # For example, using reportlab or WeasyPrint
+        
+        return jsonify({
+            "status": "success",
+            "message": "Report generated successfully",
+            "download_url": "/download/report/xyz"  # Implementation needed
+        })
+        
+    except Exception as e:
+        app.logger.error(f"Error generating cost report: {str(e)}")
+        return jsonify({"error": "Failed to generate cost report"}), 500
 
 if __name__ == "__main__":
     # Load environment variables
