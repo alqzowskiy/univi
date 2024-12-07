@@ -14,329 +14,7 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 import firebase_admin
 from firebase_admin import credentials, firestore
 import json
-
 import os
-
-
-class ContextManager:
-    def __init__(self):
-        # Improved context prompts for more natural responses
-        self.contexts = {
-            'academic': {
-                'system_prompt': """You are a friendly and knowledgeable Academic Advisor who speaks in a warm, conversational tone.
-                Always structure your responses in this format:
-
-                1. Start with a brief, empathetic acknowledgment of the student's question
-                2. Provide practical, actionable advice with clear examples
-                3. Break down complex topics into numbered steps or bullet points
-                4. Include relevant personal anecdotes or student success stories
-                5. End with encouragement and an invitation for follow-up questions
-
-                Format guidelines:
-                • Use ** for emphasis of key points
-                • Start each major section with a clear heading
-                • Use emoji markers for different types of content:
-                  📚 For academic resources
-                  💡 For tips and suggestions
-                  ⭐ For key takeaways
-                  🔍 For examples
-                  ✨ For success stories
-                """
-            },
-            'moral': {
-                'system_prompt': """You are a compassionate Student Support Advisor who speaks with genuine empathy and understanding.
-                Structure your responses in this format:
-
-                1. Begin with validation of the student's feelings
-                2. Share practical coping strategies
-                3. Provide specific examples of how others have managed similar situations
-                4. Include both immediate and long-term solutions
-                5. End with words of encouragement and support
-
-                Format guidelines:
-                • Use ** for emphasis of key points
-                • Start sections with relevant emoji markers:
-                  💭 For emotional support
-                  ⚡ For immediate actions
-                  🌟 For long-term strategies
-                  💪 For encouragement
-                  🤝 For support resources
-                """
-            },
-            'university': {
-                'system_prompt': """You are a friendly University Life Guide who speaks from experience and enthusiasm.
-                Structure your responses in this format:
-
-                1. Start with an engaging welcome or acknowledgment
-                2. Share practical insights about campus life
-                3. Include specific examples and success stories
-                4. Provide actionable steps or recommendations
-                5. End with encouragement and next steps
-
-                Format guidelines:
-                • Use ** for emphasis of key points
-                • Start sections with relevant emoji markers:
-                  🎓 For academic life
-                  🏃 For activities and events
-                  🏠 For housing and facilities
-                  👥 For social connections
-                  🌟 For opportunities
-                """
-            }
-        }
-
-    def get_prompt(self, category: str, message: str, university: str) -> str:
-        base_prompt = self.contexts.get(category, self.contexts['academic'])['system_prompt']
-        
-        # Enhanced prompt structure for better responses
-        return f"""{base_prompt}
-
-        When responding to this question:
-        1. Be conversational and friendly, like chatting with a friend
-        2. Use personal examples and relatable scenarios
-        3. Break down information into digestible chunks
-        4. Include specific resources from {university} when relevant
-        5. Make sure every response has:
-           - A warm introduction
-           - Clear, structured advice
-           - Practical examples
-           - Actionable next steps
-           - A supportive conclusion
-
-        Context:
-        - University: {university}
-        - Category: {category}
-        
-        Student Question: {message}
-        """
-
-class ResponseEnhancer:
-    def __init__(self):
-        self.logger = logging.getLogger(__name__)
-        
-    def enhance_response(self, response: str, category: str) -> Dict:
-        try:
-            # Clean and format the response
-            formatted_response = self._format_response(response)
-            
-            # Extract and enhance key points
-            key_points = self._extract_key_points(formatted_response)
-            
-            # Generate contextual resources
-            resources = self._generate_resources(formatted_response, category)
-            
-            # Add interactive elements
-            interactive = self._add_interactive_elements(category)
-            
-            return {
-                "response": formatted_response,
-                "key_points": key_points,
-                "resources": resources,
-                "interactive": interactive,
-                "timestamp": datetime.now().isoformat()
-            }
-        except Exception as e:
-            self.logger.error(f"Error enhancing response: {str(e)}")
-            return {"response": self._format_response(response)}
-
-    def _format_response(self, text: str) -> str:
-        """Improve formatting of the response text"""
-        # Split into paragraphs
-        paragraphs = text.split('\n\n')
-        formatted_paragraphs = []
-        
-        for i, paragraph in enumerate(paragraphs):
-            # Format headings
-            if i == 0:
-                # First paragraph gets special formatting
-                formatted_paragraphs.append(f"**Welcome!** {paragraph}")
-            elif any(marker in paragraph for marker in ['💡', '📚', '💭', '🎓', '⭐']):
-                # Preserve emoji markers
-                formatted_paragraphs.append(paragraph)
-            elif ':' in paragraph and len(paragraph.split(':')[0]) < 30:
-                # Format section headers
-                header, content = paragraph.split(':', 1)
-                formatted_paragraphs.append(f"**{header.strip()}:** {content.strip()}")
-            else:
-                formatted_paragraphs.append(paragraph)
-
-        # Join paragraphs and enhance formatting
-        formatted_text = '\n\n'.join(formatted_paragraphs)
-        
-        # Enhance bullet points
-        formatted_text = '\n'.join([
-            f"• {line[1:].strip()}" if line.strip().startswith('•') else line
-            for line in formatted_text.split('\n')
-        ])
-
-        return formatted_text
-
-    def _extract_key_points(self, text: str) -> List[str]:
-        """Extract and enhance key points from the response"""
-        points = []
-        
-        # Look for explicit key points or important statements
-        for line in text.split('\n'):
-            if any(marker in line for marker in ['⭐', '💡', '📚']):
-                points.append(line.strip())
-            elif '**' in line and len(line) < 100:
-                points.append(line.strip())
-
-        # If no explicit points found, extract important sentences
-        if not points:
-            sentences = text.split('. ')
-            points = [s.strip() + '.' for s in sentences if '**' in s or 'important' in s.lower()][:3]
-
-        return points[:3]
-
-    def _generate_resources(self, text: str, category: str) -> List[Dict]:
-        """Generate contextual resources based on the response content"""
-        # Base resources by category (as before)
-        base_resources = {
-            'academic': [
-                {"title": "Study Skills Workshop", "type": "workshop"},
-                {"title": "Academic Writing Guide", "type": "guide"},
-                {"title": "Research Methods Tutorial", "type": "tutorial"}
-            ],
-            'moral': [
-                {"title": "Wellness Center", "type": "service"},
-                {"title": "Stress Management Tips", "type": "guide"},
-                {"title": "Peer Support Network", "type": "community"}
-            ],
-            'university': [
-                {"title": "Campus Life Guide", "type": "guide"},
-                {"title": "Student Organizations", "type": "directory"},
-                {"title": "Events Calendar", "type": "calendar"}
-            ]
-        }
-
-        # Get base resources for the category
-        resources = base_resources.get(category, [])[:2]
-
-        # Add contextual resource based on content
-        keywords = {
-            'writing': {"title": "Writing Center Resources", "type": "academic"},
-            'stress': {"title": "Stress Management Workshop", "type": "wellness"},
-            'research': {"title": "Research Support Services", "type": "academic"},
-            'career': {"title": "Career Development Resources", "type": "career"},
-            'housing': {"title": "Housing Support Services", "type": "services"}
-        }
-
-        for keyword, resource in keywords.items():
-            if keyword in text.lower() and len(resources) < 3:
-                resources.append(resource)
-
-        return resources
-
-# The rest of the code (AdvisorChat class and Flask routes) remains the same
-
-class ResponseEnhancer:
-    def __init__(self):
-        self.logger = logging.getLogger(__name__)
-        
-    def enhance_response(self, response: str, category: str) -> Dict:
-        """Enhance the AI response with additional features"""
-        try:
-            # Extract key points and suggestions
-            key_points = self._extract_key_points(response)
-            
-            # Generate relevant resources
-            resources = self._generate_resources(response, category)
-            
-            # Add interactive elements
-            interactive = self._add_interactive_elements(category)
-            
-            return {
-                "response": response,
-                "key_points": key_points,
-                "resources": resources,
-                "interactive": interactive,
-                "timestamp": datetime.now().isoformat()
-            }
-        except Exception as e:
-            self.logger.error(f"Error enhancing response: {str(e)}")
-            return {"response": response}
-    
-    def _extract_key_points(self, text: str) -> List[str]:
-        """Extract key points from the response"""
-        points = []
-        for line in text.split('\n'):
-            if line.strip().startswith('•') or line.strip().startswith('-'):
-                points.append(line.strip()[1:].strip())
-        return points[:3]  # Return top 3 key points
-        
-    def _generate_resources(self, text: str, category: str) -> List[Dict]:
-        """Generate relevant resources based on the response"""
-        category_resources = {
-            'academic': [
-                {"title": "Study Skills Workshop", "type": "workshop"},
-                {"title": "Academic Writing Guide", "type": "guide"},
-                {"title": "Research Methods Tutorial", "type": "tutorial"}
-            ],
-            'moral': [
-                {"title": "Wellness Center", "type": "service"},
-                {"title": "Stress Management Tips", "type": "guide"},
-                {"title": "Peer Support Network", "type": "community"}
-            ],
-            'university': [
-                {"title": "Campus Life Guide", "type": "guide"},
-                {"title": "Student Organizations", "type": "directory"},
-                {"title": "Events Calendar", "type": "calendar"}
-            ]
-        }
-        return category_resources.get(category, [])[:2]
-    
-    def _add_interactive_elements(self, category: str) -> List[Dict]:
-        """Add interactive elements based on the category"""
-        elements = {
-            'academic': [
-                {"type": "poll", "question": "How helpful was this academic advice?"},
-                {"type": "reminder", "text": "Set a study schedule reminder"}
-            ],
-            'moral': [
-                {"type": "mood_tracker", "text": "Track your mood"},
-                {"type": "breathing", "text": "Try a breathing exercise"}
-            ],
-            'university': [
-                {"type": "event_reminder", "text": "Save event to calendar"},
-                {"type": "connect", "text": "Connect with peers"}
-            ]
-        }
-        return elements.get(category, [])
-
-class AdvisorChat:
-    def __init__(self):
-        self.model = genai.GenerativeModel('gemini-pro')
-        self.context_manager = ContextManager()
-        self.response_enhancer = ResponseEnhancer()
-        self.logger = logging.getLogger(__name__)
-
-    async def process_message(self, message: str, category: str, university: str) -> Dict:
-        """Process a chat message and return enhanced response"""
-        try:
-            # Get context-aware prompt
-            prompt = self.context_manager.get_prompt(category, message, university)
-            
-            # Generate AI response
-            response = self.model.generate_content(prompt)
-            
-            if not response.text:
-                raise ValueError("No response received from AI model")
-            
-            # Enhance the response
-            enhanced_response = self.response_enhancer.enhance_response(
-                response.text,
-                category
-            )
-            
-            return enhanced_response
-            
-        except Exception as e:
-            self.logger.error(f"Error processing message: {str(e)}")
-            return {
-                "error": "Failed to process message",
-                "details": str(e)
-            }
 
 # Initialize Firebase Admin SDK
 try:
@@ -350,8 +28,6 @@ try:
 except Exception as e:
     print(f"Error initializing Firebase: {str(e)}")
     db = None
-
-
 
 class ResponseFormatter:
     def __init__(self):
@@ -476,70 +152,30 @@ class UniversityRecommender:
         return imageresponse.get('items')[0].get('link') #"https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/813.png"
     # def _get_university_image(self, university_name: str, country: str) -> str:   
     #     return "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/813.png"
-
-
     def _generate_university_label(self, university_name: str, faculty_strengths: str) -> List[Dict[str, str]]:
         """Generate badge with only verified rankings and achievements"""
-        prompt = f"""
-        For {university_name}, you must STRICTLY follow these verification steps:
-
-        1. ONLY return rankings if you are 100% certain they come from:
-        - QS World Rankings 2024 (released Sept 2023)
-        - Times Higher Education 2024 (released Sept 2023)
-        - Shanghai ARWU 2023 (most recent)
-        
-        2. You must EXPLICITLY verify the ranking against these specific sources.
-        Do NOT guess or approximate rankings.
-        
-        3. If you cannot verify the EXACT ranking with 100% certainty:
-        - For top 100 global universities: Return "Top 100 Global University"
-        - For others: Return "Established Institution" 
-        
-        4. Regional rankings (e.g. "Top 5 in Asia") should ONLY be used if:
-        - They come from QS or THE's official regional rankings
-        - They are from the most recent 2024 rankings
-        - You can verify the exact position
-
-        Return in this exact JSON format:
-        [
-            {{
-                "type": "ranking",
-                "text": "VERIFIED ranking with source",
-                "details": "Ranking organization and year",
-                "field": "Overall or specific field"
-            }}
-        ]
-
-        CRITICAL RULES:
-        1. Default to "Established Institution" unless you have 100% verified data
-        2. Never guess or approximate rankings
-        3. Always include the ranking source
-        4. For field-specific rankings, only use official subject rankings
-        5. Better to return "Established Institution" than risk incorrect ranking
-
-        Example correct responses:
-        - "Top 50 Global University (QS 2024)"
-        - "Established Institution"
-        - "#3 in Engineering (THE 2024)"
-        
-        NEVER return any ranking unless you can verify it against the official 2024 ranking publications.
-        """
-
-        # Add logging for debugging
         try:
-            response = self.model.generate_content(prompt)
-            label = json.loads(response.text)
-            self.logger.info(f"Generated label for {university_name}: {label}")
-            return label
-        except Exception as e:
-            self.logger.error(f"Error generating label for {university_name}: {str(e)}")
-            # Fallback to safe default
-            return [{
-                "type": "ranking",
-                "text": "Established Institution",
-                "details": "Higher Education Institution",
-                "field": "Education"
-            }]
+            prompt = f"""
+            For {university_name}, provide ONLY 100% VERIFIED and CURRENT ranking from official sources (QS World Rankings, Times Higher Education, or official national rankings).
+            Return in this exact JSON format:
+            [
+                {{
+                    "type": "ranking",
+                    "text": "EXACT current ranking with specific region",
+                    "details": "Exact year",
+                    "field": "Ranking field"
+                }}
+            ]
+
+            STRICT RULES:
+            1. Only include rankings that you are 100% certain are current and accurate
+            2. Must specify exact region ONLY TRUE ONES! (e.g. "#5 in Italy for Engineering", "#120 Globally", "#15 in Europe for Business")
+            3. Include ranking year
+            4. If no verified current ranking exists, return "Established University"
+            5. NO ESTIMATES OR GUESSES - if uncertain, return "Established University"
+            6. should not be long like 1-5 words max
+            7. REAL CHECKED INFORMATION !!!
+            """
 
             response = self.model.generate_content(prompt)
             badges = json.loads(response.text)
@@ -548,10 +184,10 @@ class UniversityRecommender:
                 badge = badges[0]
                 # Determine color and icon based on ranking type
                 if "Globally" in badge["text"]:
-                    color_class = "bg-blue-600"
+                    color_class = "bg-blue-500"
                     prefix = "🌐"
                 elif "Europe" in badge["text"]:
-                    color_class = "bg-blue-600"
+                    color_class = "bg-green-500"
                     prefix = "🌍"
                 else:
                     color_class = "bg-blue-600"
@@ -589,38 +225,17 @@ class UniversityRecommender:
         """Get detailed information about a university"""
         try:
             prompt = f"""
-        Provide verified, current information about {university_name} in {country}.
-        Return in this exact JSON format:
-        {{
-            "description": "Brief factual overview focusing on key distinguishing features",
-            "notablePrograms": "List ONLY currently offered, flagship programs with any relevant accreditations",
-            "campusLife": "Factual description of current campus facilities and student services",
-            "admissionRequirements": {{
-                "general": "Core requirements that apply to all programs",
-                "international": "Specific requirements for international students",
-                "language": "Official language requirements with specific scores",
-                "deadlines": "Current application deadlines if verified"
-            }},
-            "researchOpportunities": {{
-                "centers": ["List of active research centers"],
-                "strengths": ["Key research areas with current projects"],
-                "funding": "Available research funding opportunities"
-            }},
-            "rankings": {{
-                "global": "Current verified global ranking with source",
-                "subject": "Current verified subject rankings with sources",
-                "regional": "Current verified regional ranking with source"
+            Please provide detailed information about {university_name} in {country}.
+            Return the response in this exact JSON format:
+            {{
+                "description": "Brief overview",
+                "notablePrograms": "List of programs",
+                "campusLife": "Description of campus life",
+                "admissionRequirements": "Admission details",
+                "researchOpportunities": "Research facilities and options",
+                "ranking": "Current rankings"
             }}
-        }}
-
-        VERIFICATION GUIDELINES:
-        1. Only include information from official university sources or verified ranking bodies
-        2. Specify "Information not verified" for any section without current verified data
-        3. Include specific dates/years for all rankings and requirements
-        4. Focus on current academic year information
-        5. Prioritize factual information over marketing claims
-        6. Include specific numbers and requirements where verified
-        """
+            """
 
             response = self.model.generate_content(prompt)
             if not response.text:
@@ -713,82 +328,61 @@ class UniversityRecommender:
 
 
     def recommend(self, country: str, faculty: str = None, gpa: str = None,
-                 budget: str = None, sat: str = None, extra: str = None) -> Union[List[Dict], Dict[str, str]]:
+                    budget: str = None, sat: str = None, extra: str = None) -> Union[List[Dict], Dict[str, str]]:
         """Generate accurate university recommendations with specific, verified data"""
         if not country:
             return {"error": "Country is required"}
 
         try:
             prompt = f"""
-        Return EXACTLY 6 universities in {country} with STRICTLY VERIFIED data from 2024.
-        
-        Required JSON format:
-        [
-            {{
-                "universityName": "Official Institution Name",
-                "location": {{
-                    "city": "City name",
-                    "region": "Region/State",
-                    "country": "{country}"
-                }},
-                "tuition": {{
-                    "amount": "Exact amount in local currency AND USD",
-                    "details": "Payment schedule and included fees",
-                    "year": "Academic year for these rates",
-                    "international_student_fees": "Additional fees if applicable"
-                }},
-                "admissionStats": {{
-                    "acceptanceRate": {{
-                        "rate": "Exact percentage from most recent cycle",
-                        "year": "Year of data",
-                        "source": "Data source"
-                    }},
-                    "requirements": {{
-                        "gpa": {{
-                            "minimum": "Verified minimum GPA",
-                            "competitive": "GPA for competitive admission",
-                            "scale": "GPA scale used"
-                        }},
-                        "tests": {{
-                            "required": ["Required standardized tests"],
-                            "minimum_scores": "Minimum verified scores",
-                            "preferred_scores": "Scores for competitive admission"
-                        }}
-                    }}
-                }},
-                "accreditation": {{
-                    "national": ["List of current national accreditations"],
-                    "international": ["List of current international accreditations"],
-                    "program_specific": ["List of program-specific accreditations"]
-                }},
-                "rankings": {{
-                    "source": "Ranking organization",
-                    "year": "2024",
-                    "position": "Exact verified position",
-                    "category": "Ranking category"
-                }}
-            }}
-        ]
+            Return EXACTLY 6 universities in {country} with VERIFIED data.
+            
+            You MUST:
+            1. Return the response in VALID JSON format
+            2. Only provide real information
+            3. Use specific numbers and ranges instead of "Varies"
+            4. Follow this EXACT example format:
 
-        STRICT VERIFICATION RULES:
-        1. Only use official university data and verified ranking sources from 2024
-        2. All numbers must be current and specifically sourced
-        3. Include complete tuition information with exact amounts
-        4. Specify "Data not verified" for any unverified information
-        5. Only include accreditations that can be verified on official websites
-        6. Use region-specific admission requirements where applicable
-        """
+            [
+                {{
+                    "universityName": "Full Official Name",
+                    "location": "City, {country}",
+                    "tuition": {{
+                        "amount": "Exact amount in local currency",
+                        "details": "Annual/semester and program info"
+                    }},
+                    "admissionStats": {{
+                        "acceptanceRate": {{
+                            "rate": "Exact percentage or range (e.g. 65-75%)",
+                            "year": "2023"
+                        }},
+                        "gpaRequirements": {{
+                            "minimum": "3.0",
+                            "preferred": "3.5+",
+                            "notes": "For general admission"
+                        }}
+                    }},
+                    "facultyStrengths": [
+                        {{
+                            "field": "Computer Science",
+                            "ranking": "#5 in Europe",
+                            "source": "QS Rankings 2024"
+                        }}
+                    ]
+                }}
+            ]
+            """
 
             if faculty:
-                prompt += f"\nFilter for universities with strong verified programs in: {faculty}"
+                prompt += f"\nFocus on universities strong in: {faculty}"
             if gpa:
-                prompt += f"\nConsider GPA requirement: {gpa}"
+                prompt += f"\nTarget GPA level: {gpa}"
             if sat:
-                prompt += f"\nConsider SAT requirement: {sat}"
+                prompt += f"\nTarget SAT score: {sat}"
             if budget:
-                prompt += f"\nFilter for universities within budget: {budget}"
+                prompt += f"\nTarget budget: {budget}"
             if extra:
-                prompt += f"\nAdditional verified criteria: {extra}"
+                prompt += f"\nAdditional criteria: {extra}"
 
             response = self.model.generate_content(prompt)
             if not response or not response.text:
@@ -1023,88 +617,6 @@ def user_profile():
     """Render the user profile page"""
     return render_template('user.html')
 
-@app.route('/cost-calculator')
-def cost_calculator():
-    """Render the university cost calculator page"""
-    return render_template('cost_calculator.html')
-
-@app.route('/calculate-costs', methods=['POST'])
-def calculate_costs():
-    """Calculate university costs"""
-    try:
-        university = request.form.get('university')
-        country = request.form.get('country')
-        
-        if not university or not country:
-            return jsonify({"error": "University and country are required"}), 400
-            
-        prompt = f"""
-        Provide detailed cost breakdown for studying at {university} in {country}. 
-        Return in this exact format:
-        {{
-            "monthly_costs": {{
-                "accommodation": {{
-                    "amount": "average monthly cost in USD",
-                    "details": "includes utilities, typical apartment/dorm cost"
-                }},
-                "food": {{
-                    "amount": "average monthly cost in USD",
-                    "details": "includes groceries and occasional dining out"
-                }},
-                "transport": {{
-                    "amount": "average monthly cost in USD",
-                    "details": "public transport passes, typical commute costs"
-                }},
-                "extras": {{
-                    "amount": "average monthly cost in USD",
-                    "details": "entertainment, personal expenses, etc."
-                }}
-            }},
-            "yearly_costs": {{
-                "tuition": {{
-                    "amount": "yearly cost in USD",
-                    "details": "includes mandatory fees and course materials"
-                }},
-                "insurance": {{
-                    "amount": "yearly cost in USD",
-                    "details": "required student health insurance"
-                }},
-                "books": {{
-                    "amount": "yearly cost in USD",
-                    "details": "textbooks and study materials"
-                }},
-                "fees": {{
-                    "amount": "yearly cost in USD",
-                    "details": "administrative and student service fees"
-                }}
-            }},
-            "one_time_costs": {{
-                "visa": {{
-                    "amount": "cost in USD",
-                    "details": "student visa application fees"
-                }},
-                "setup": {{
-                    "amount": "cost in USD",
-                    "details": "initial housing deposit, basic furnishings, etc."
-                }}
-            }},
-            "estimated_total": {{
-                "first_year": "total first year cost in USD",
-                "per_year": "typical cost per subsequent year in USD",
-                "notes": "important considerations about costs"
-            }}
-        }}
-        """
-        
-        response = genai.GenerativeModel('gemini-pro').generate_content(prompt)
-        costs = json.loads(response.text)
-        
-        return jsonify(costs)
-        
-    except Exception as e:
-        app.logger.error(f"Error calculating costs: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-    
 @app.route('/')
 def index():
     return render_template('mainpage.html')
@@ -1548,6 +1060,313 @@ def not_found_error(error):
 @app.errorhandler(500)
 def internal_error(error):
     return render_template('500.html'), 500
+
+@app.route('/cost-calculator')
+def cost_calculator():
+    """Render the university cost calculator page"""
+    return render_template('cost_calculator.html')
+
+@app.route('/calculate-costs', methods=['POST'])
+def calculate_costs():
+    """Calculate university costs with improved error handling"""
+    try:
+        university = request.form.get('university')
+        country = request.form.get('country')
+        
+        if not university or not country:
+            return jsonify({"error": "University and country are required"}), 400
+            
+        prompt = f"""
+Provide DETAILED cost breakdown for studying at {university} in {country}.Instead of "PRICE" write the real prices at {university} in {country}.I give u an example, you gotta put info from {university} in {country} Return in this exact JSON format:
+
+{{
+    "monthly_costs": {{
+        "accommodation": {{
+            "amount": PRICE,
+            "details": "Average cost for student housing",
+            "options": [
+                {{"type": "University Dorm", "cost": PRICE, "notes": "Shared room, utilities included"}},
+                {{"type": "Private Room", "cost": PRICE, "notes": "In shared apartment"}},
+                {{"type": "Studio Apartment", "cost": PRICE, "notes": "Private accommodation"}}
+            ]
+        }},
+        "food": {{
+            "amount": PRICE,
+            "details": "Student meal plan and groceries",
+            "breakdown": {{
+                "meal_plan": PRICE,
+                "groceries": PRICE,
+                "dining_out": PRICE,
+            }}
+        }},
+        "transport": {{
+            "amount": PRICE,
+            "details": "Public transportation",
+            "options": [
+                {{"type": "Student Transit Pass", "cost": PRICE}},
+                {{"type": "Bike Share", "cost": 20}},
+                {{"type": "Occasional Taxi", "cost": 30}}
+            ]
+        }},
+        "utilities": {{
+            "amount": 150,
+            "details": "Basic utilities and internet",
+            "breakdown": {{
+                "electricity": PRICE,
+                "water": PRICE,
+                "internet": PRICE,
+                "phone": PRICE
+            }}
+        }},
+        "personal": {{
+            "amount": ,
+            "details": "Personal expenses",
+            "breakdown": {{
+                "entertainment": PRICE,
+                "gym": PRICE,
+                "clothing": PRICE,
+                "miscellaneous": PRICE
+            }}
+        }},
+        "study": {{
+            "amount": PRICE,
+            "details": "Study materials and supplies",
+            "breakdown": {{
+                "books": PRICE,
+                "supplies": PRICE,
+                "printing": PRICE,
+                "software": PRICE
+            }}
+        }}
+    }},
+    "yearly_costs": {{
+        "tuition": {{
+            "amount": PRICE,
+            "details": "International student tuition",
+            "variations": [
+                {{"program": "Undergraduate", "amount": PRICE}},
+                {{"program": "Masters", "amount": PRICE}},
+                {{"program": "PhD", "amount": PRICE}}
+            ]
+        }},
+        "insurance": {{
+            "amount": PRICE,
+            "details": "Required health insurance",
+            "coverage": [
+                "Medical",
+                "Dental",
+                "Emergency",
+                "Prescription drugs"
+            ]
+        }},
+        "academic_fees": {{
+            "amount": PRICE,
+            "details": "Various academic fees",
+            "breakdown": {{
+                "registration": PRICE,
+                "technology": PRICE,
+                "library": PRICE,
+                "student_services": PRICE,
+                "lab_access": PRICE
+            }}
+        }}
+    }},
+    "one_time_costs": {{
+        "visa": {{
+            "amount": PRICE,
+            "details": "Student visa application",
+            "additional_fees": [
+                {{"type": "Processing", "cost": PRICE}},
+                {{"type": "Documentation", "cost": PRICE}},
+                {{"type": "Insurance verification", "cost": PRICE}}
+            ]
+        }},
+        "setup": {{
+            "amount": PRICE,
+            "details": "Initial setup costs",
+            "breakdown": {{
+                "housing_deposit": PRICE,
+                "basic_furniture": PRICE,
+                "essentials": PRICE,
+                "arrival_transport": PRICE
+            }}
+        }},
+        "admission": {{
+            "amount": PRICE,
+            "details": "Admission-related fees",
+            "breakdown": {{
+                "application": PRICE,
+                "document_verification": PRICE,
+                "enrollment": PRICE
+            }}
+        }}
+    }},
+    "savings_opportunities": [
+        {{
+            "category": "Housing",
+            "potential_saving": "PRICE-PRICE",
+            "strategy": "Choose shared accommodation or university dormitory"
+        }},
+        {{
+            "category": "Food",
+            "potential_saving": "PRICE-PRICE",
+            "strategy": "Cook meals at home and use meal plan"
+        }},
+        {{
+            "category": "Transportation",
+            "potential_saving": "PRICE-PRICE",
+            "strategy": "Use student transit passes and bike sharing"
+        }}
+    ],
+    "financial_aid": {{
+        "scholarships": [
+            {{
+                "type": "Merit-based",
+                "amount": "PRICE-PRICE",
+                "eligibility": "High academic achievement"
+            }},
+            {{
+                "type": "Need-based",
+                "amount": "Variable",
+                "eligibility": "Financial need assessment"
+            }}
+        ],
+        "work_study": {{
+            "available": true,
+            "hours_per_week": "HOURS-HOURS",
+            "typical_wage": "PRICE-PRICE"
+        }}
+    }},
+    "local_cost_context": {{
+        "city_expense_index": "Moderate/High/Low",
+        "comparison": "DISCOUNT% higher than national average",
+        "student_discounts": [
+            "Public transport - DISCOUNT% off",
+            "Cultural venues - DISCOUNT-DISCOUNT% off",
+            "Software and tech - Special student pricing"
+        ]
+    }}
+}}
+
+Important:
+1. All monetary values must be in USD
+2. Use verified/realistic costs for {university} and {country}
+3. Include detailed breakdowns where possible
+4. Consider both minimum and typical expenses
+5. Account for international student specific costs
+"""
+        response = genai.GenerativeModel('gemini-pro').generate_content(prompt)
+        if not response.text:
+            raise ValueError("No response received from AI model")
+
+        # Clean the response text
+        text = response.text.strip()
+        
+        # Debug logging
+        app.logger.info(f"Raw AI response: {text}")
+        
+        # Remove any potential markdown code block markers
+        if text.startswith('```json'):
+            text = text[7:]
+        if text.startswith('```'):
+            text = text[3:]
+        if text.endswith('```'):
+            text = text[:-3]
+            
+        # Clean up any remaining whitespace
+        text = text.strip()
+        
+        app.logger.info(f"Cleaned text before parsing: {text}")
+
+        try:
+            # Parse the JSON response
+            costs = json.loads(text)
+        except json.JSONDecodeError as e:
+            app.logger.error(f"JSON parsing error: {str(e)}\nText: {text}")
+            # Try to extract JSON using regex as fallback
+            import re
+            json_match = re.search(r'({.*})', text, re.DOTALL)
+            if json_match:
+                try:
+                    costs = json.loads(json_match.group(1))
+                except json.JSONDecodeError:
+                    raise ValueError("Could not parse cost data from response")
+            else:
+                raise ValueError("Could not find valid JSON in response")
+
+        # Process and validate the costs
+        processed_costs = {
+            "monthly_costs": {},
+            "yearly_costs": {},
+            "one_time_costs": {}
+        }
+
+        # Helper function to clean amount values
+        def clean_amount(amount) -> float:
+            if isinstance(amount, (int, float)):
+                return float(amount)
+            if isinstance(amount, str):
+                # Remove any non-numeric characters except decimal point
+                cleaned = ''.join(c for c in amount if c.isdigit() or c == '.')
+                return float(cleaned) if cleaned else 0
+            return 0
+
+        # Process each cost category
+        for category in ["monthly_costs", "yearly_costs", "one_time_costs"]:
+            if category in costs:
+                for item, details in costs[category].items():
+                    amount = clean_amount(details.get("amount", 0))
+                    processed_costs[category][item] = {
+                        "amount": amount,
+                        "details": details.get("details", ""),
+                        "display_amount": f"${amount:,.2f}"
+                    }
+
+        # Calculate totals
+        monthly_total = sum(item["amount"] for item in processed_costs["monthly_costs"].values())
+        yearly_total = sum(item["amount"] for item in processed_costs["yearly_costs"].values())
+        one_time_total = sum(item["amount"] for item in processed_costs["one_time_costs"].values())
+
+        first_year_total = yearly_total + (monthly_total * 12) + one_time_total
+        subsequent_years = yearly_total + (monthly_total * 12)
+
+        # Add totals to response
+        processed_costs["totals"] = {
+            "monthly": {
+                "amount": monthly_total,
+                "display_amount": f"${monthly_total:,.2f}"
+            },
+            "yearly": {
+                "amount": yearly_total,
+                "display_amount": f"${yearly_total:,.2f}"
+            },
+            "first_year": {
+                "amount": first_year_total,
+                "display_amount": f"${first_year_total:,.2f}"
+            },
+            "subsequent_years": {
+                "amount": subsequent_years,
+                "display_amount": f"${subsequent_years:,.2f}"
+            }
+        }
+
+        # Store calculation in session
+        session['last_calculation'] = {
+            'university': university,
+            'country': country,
+            'timestamp': datetime.now().isoformat(),
+            'first_year_total': first_year_total
+        }
+
+        return jsonify(processed_costs)
+
+    except Exception as e:
+        app.logger.error(f"Error calculating costs: {str(e)}")
+        return jsonify({
+            "error": "Failed to calculate costs",
+            "details": str(e)
+        }), 500
+
 
 if __name__ == "__main__":
     # Load environment variables
