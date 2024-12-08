@@ -233,324 +233,111 @@
                             </div>
                         </div>
 
-                        <!-- Setup & One-time Tab -->
-                        <div id="setupTab" class="tab-content hidden">
+                        <!-- Setup Tab Content -->
+                        <div id="setupTab" class="tab-content">
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                <!-- Visa & Immigration -->
+                                <!-- Visa & Immigration Section -->
                                 <div class="bg-white rounded-lg p-6 shadow-md">
                                     <h3 class="text-lg font-semibold mb-4 flex items-center">
-                                        <i data-feather="file-text" class="w-5 h-5 mr-2 text-blue-600"></i>
-                                        Visa & Immigration
+                                        <i class="fas fa-passport mr-2"></i> Visa & Immigration
                                     </h3>
                                     <div id="visaCosts" class="space-y-4">
-                                        <!-- Populated by JavaScript -->
+                                        <!-- Will be populated by JavaScript -->
                                     </div>
                                 </div>
 
-                                <!-- Housing Setup -->
+                                <!-- Housing Setup Section -->
                                 <div class="bg-white rounded-lg p-6 shadow-md">
                                     <h3 class="text-lg font-semibold mb-4 flex items-center">
-                                        <i data-feather="home" class="w-5 h-5 mr-2 text-blue-600"></i>
-                                        Housing Setup
+                                        <i class="fas fa-home mr-2"></i> Housing Setup
                                     </h3>
                                     <div id="housingSetup" class="space-y-4">
-                                        <!-- Populated by JavaScript -->
+                                        <!-- Will be populated by JavaScript -->
                                     </div>
                                 </div>
 
-                                <!-- Initial Expenses Timeline -->
+                                <!-- Expense Timeline Section -->
                                 <div class="col-span-2 bg-white rounded-lg p-6 shadow-md">
                                     <h3 class="text-lg font-semibold mb-4 flex items-center">
-                                        <i data-feather="clock" class="w-5 h-5 mr-2 text-blue-600"></i>
-                                        Expense Timeline
+                                        <i class="fas fa-clock mr-2"></i> Expense Timeline
                                     </h3>
                                     <div id="expenseTimeline" class="relative">
-                                        <!-- Populated by JavaScript -->
+                                        <!-- Will be populated by JavaScript -->
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Savings & Aid Tab -->
+                        <!-- Savings Tab Content -->
                         <div id="savingsTab" class="tab-content hidden">
                             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                <!-- Scholarships -->
+                                <!-- Scholarships Section -->
                                 <div class="bg-white rounded-lg p-6 shadow-md">
                                     <h3 class="text-lg font-semibold mb-4 flex items-center">
-                                        <i data-feather="award" class="w-5 h-5 mr-2 text-blue-600"></i>
-                                        Available Scholarships
+                                        <i class="fas fa-award mr-2"></i> Available Scholarships
                                     </h3>
                                     <div id="scholarships" class="space-y-4">
-                                        <!-- Populated by JavaScript -->
+                                        <!-- Will be populated by JavaScript -->
                                     </div>
                                 </div>
 
-                                <!-- Work Opportunities -->
+                                <!-- Work Opportunities Section -->
                                 <div class="bg-white rounded-lg p-6 shadow-md">
                                     <h3 class="text-lg font-semibold mb-4 flex items-center">
-                                        <i data-feather="briefcase" class="w-5 h-5 mr-2 text-blue-600"></i>
-                                        Work Opportunities
+                                        <i class="fas fa-briefcase mr-2"></i> Work Opportunities
                                     </h3>
                                     <div id="workOpportunities" class="space-y-4">
-                                        <!-- Populated by JavaScript -->
+                                        <!-- Will be populated by JavaScript -->
                                     </div>
                                 </div>
 
-                                <!-- Cost Reduction Strategies -->
+                                <!-- Cost Reduction Section -->
                                 <div class="bg-white rounded-lg p-6 shadow-md">
                                     <h3 class="text-lg font-semibold mb-4 flex items-center">
-                                        <i data-feather="trending-down" class="w-5 h-5 mr-2 text-blue-600"></i>
-                                        Cost Reduction
+                                        <i class="fas fa-piggy-bank mr-2"></i> Cost Reduction
                                     </h3>
                                     <div id="costReduction" class="space-y-4">
-                                        <!-- Populated by JavaScript -->
+                                        <!-- Will be populated by JavaScript -->
                                     </div>
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
-            </div>
 
-            <script>
-                // Initialize variables and setup
-                let charts = {
-                    monthlyDistribution: null,
-                    academicCosts: null,
-                    savingsBreakdown: null
-                };
+                <script>
+                    // Store calculator data globally
+                    let calculatorData = null;
 
-                // Initialize Feather Icons
-                feather.replace();
-                // Function to handle tab data loading and display
-                function updateTabContent(tabId, data) {
-                    switch (tabId) {
-                        case 'academicTab':
-                            // Program Costs Comparison
-                            const programData = data.yearly_costs.tuition.variations;
-                            const programChart = new Chart(
-                                document.getElementById('programCostsChart'),
-                                {
-                                    type: 'bar',
-                                    data: {
-                                        labels: programData.map(p => p.program),
-                                        datasets: [{
-                                            label: 'Annual Tuition',
-                                            data: programData.map(p => p.amount),
-                                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                                            borderColor: 'rgb(59, 130, 246)',
-                                            borderWidth: 1
-                                        }]
-                                    },
-                                    options: {
-                                        responsive: true,
-                                        scales: {
-                                            y: {
-                                                beginAtZero: true,
-                                                title: {
-                                                    display: true,
-                                                    text: 'Cost (USD)'
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            );
-                            function updateTabContent(tabId, data) {
-                                switch (tabId) {
-                                    case 'academicTab':
-                                        // [Previous academic tab code remains the same]
-                                        break;
+                    // Store chart instances
+                    let charts = {
+                        monthlyDistribution: null,
+                        programCosts: null
+                    };
 
-                                    case 'setupTab':
-                                        // Call the proper update function for setup costs
-                                        if (data.one_time_costs) {
-                                            // Update Visa & Immigration section
-                                            updateSetupCosts(data.one_time_costs);
-                                        } else {
-                                            document.getElementById('visaCosts').innerHTML = '<p class="text-gray-500">No visa cost information available</p>';
-                                            document.getElementById('housingSetup').innerHTML = '<p class="text-gray-500">No housing setup information available</p>';
-                                        }
-                                        break;
+                    // Initialize when document loads
+                    document.addEventListener('DOMContentLoaded', function () {
+                        // Initialize Feather icons
+                        feather.replace();
 
-                                    case 'savingsTab':
-                                        // Call the proper update function for savings and aid
-                                        updateSavingsInfo(
-                                            data.savings_opportunities || [],
-                                            data.financial_aid || {
-                                                scholarships: [],
-                                                work_study: null
-                                            }
-                                        );
+                        // Add form submit handler
+                        document.getElementById('costCalculatorForm').addEventListener('submit', handleFormSubmit);
 
-                                        // Also update the scholarships section separately
-                                        const scholarshipsContainer = document.getElementById('scholarships');
-                                        if (data.financial_aid?.scholarships) {
-                                            scholarshipsContainer.innerHTML = `
-                    <div class="space-y-4">
-                        ${data.financial_aid.scholarships.map(scholarship => `
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="font-medium">${scholarship.type}</span>
-                                    <span class="text-blue-600 font-bold">${scholarship.amount}</span>
-                                </div>
-                                <p class="text-sm text-gray-600">${scholarship.eligibility}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-                                        } else {
-                                            scholarshipsContainer.innerHTML = '<p class="text-gray-500">No scholarship information available</p>';
-                                        }
-                                        break;
-                                }
-                            }
+                        // Add tab switching handlers
+                        document.querySelectorAll('.tab-button').forEach(button => {
+                            button.addEventListener('click', () => handleTabSwitch(button));
+                        });
+                    });
 
-                            // Mandatory Fees
-                            const feesContainer = document.getElementById('mandatoryFees');
-                            feesContainer.innerHTML = data.yearly_costs.academic_fees.breakdown ?
-                                Object.entries(data.yearly_costs.academic_fees.breakdown)
-                                    .map(([fee, amount]) => `
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <div class="flex justify-between items-center">
-                                <span class="font-medium">${formatFeeTitle(fee)}</span>
-                                <span class="text-blue-600 font-bold">${formatCurrency(amount)}</span>
-                            </div>
-                            <p class="text-sm text-gray-600 mt-1">Per academic year</p>
-                        </div>
-                    `).join('') :
-                                '<p class="text-gray-500">No mandatory fees information available</p>';
+                    // Handle form submission
+                    async function handleFormSubmit(e) {
+                        e.preventDefault();
+                        const formData = new FormData(e.target);
+                        const submitButton = e.target.querySelector('button[type="submit"]');
 
-                            // Materials & Equipment
-                            const materialsContainer = document.getElementById('programMaterials');
-                            materialsContainer.innerHTML = `
-                <div class="space-y-4">
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="font-medium mb-2">Estimated Course Materials</h4>
-                        <div class="flex justify-between items-center">
-                            <span>Books and Supplies</span>
-                            <span class="text-blue-600 font-bold">${formatCurrency(data.monthly_costs.study?.amount || 0)}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-                            // Payment Schedule
-                            const scheduleContainer = document.getElementById('paymentSchedule');
-                            scheduleContainer.innerHTML = `
-                <div class="space-y-4">
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h4 class="font-medium mb-2">Payment Deadlines</h4>
-                        <div class="space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span>Fall Semester</span>
-                                <span class="text-blue-600">August 1st</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span>Spring Semester</span>
-                                <span class="text-blue-600">December 1st</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-                            break;
-
-                        case 'setupTab':
-                            // One-time Costs
-                            const setupContainer = document.getElementById('setupCosts');
-                            if (data.one_time_costs) {
-                                setupContainer.innerHTML = Object.entries(data.one_time_costs)
-                                    .map(([category, details]) => `
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <h4 class="font-medium mb-2">${formatFeeTitle(category)}</h4>
-                            <div class="flex justify-between items-center">
-                                <span>${details.details}</span>
-                                <span class="text-blue-600 font-bold">${formatCurrency(details.amount)}</span>
-                            </div>
-                        </div>
-                    `).join('');
-                            }
-
-                            // Timeline
-                            const timelineContainer = document.getElementById('setupTimeline');
-                            timelineContainer.innerHTML = `
-                <div class="relative pt-4">
-                    <div class="flex items-center mb-8">
-                        <div class="bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-white">1</div>
-                        <div class="ml-4">
-                            <h4 class="font-medium">Application & Documentation</h4>
-                            <p class="text-sm text-gray-600">6-8 months before start</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center mb-8">
-                        <div class="bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-white">2</div>
-                        <div class="ml-4">
-                            <h4 class="font-medium">Visa Process</h4>
-                            <p class="text-sm text-gray-600">3-4 months before start</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <div class="bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-white">3</div>
-                        <div class="ml-4">
-                            <h4 class="font-medium">Housing & Setup</h4>
-                            <p class="text-sm text-gray-600">1-2 months before start</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-                            break;
-
-                        case 'savingsTab':
-                            // Financial Aid
-                            const aidContainer = document.getElementById('financialAid');
-                            if (data.financial_aid) {
-                                const scholarships = data.financial_aid.scholarships;
-                                aidContainer.innerHTML = `
-                    <div class="space-y-4">
-                        ${scholarships.map(scholarship => `
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <h4 class="font-medium mb-2">${scholarship.type}</h4>
-                                <div class="flex justify-between items-center">
-                                    <span>${scholarship.eligibility}</span>
-                                    <span class="text-blue-600 font-bold">${scholarship.amount}</span>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-                            }
-                            break;
-                    }
-                }
-
-                // Helper functions
-                function formatFeeTitle(fee) {
-                    return fee.split('_')
-                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                        .join(' ');
-                }
-
-                function formatCurrency(amount) {
-                    return new Intl.NumberFormat('en-US', {
-                        style: 'currency',
-                        currency: 'USD',
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0
-                    }).format(amount);
-                }
-
-                // Update the form submission handler
-                document.getElementById('costCalculatorForm').addEventListener('submit', async (e) => {
-                    e.preventDefault();
-
-                    const formData = new FormData(e.target);
-                    const submitButton = e.target.querySelector('button[type="submit"]');
-
-                    // Show loading state
-                    submitButton.disabled = true;
-                    submitButton.innerHTML = `
+                        // Show loading state
+                        submitButton.disabled = true;
+                        submitButton.innerHTML = `
         <svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
@@ -558,122 +345,447 @@
         Calculating...
     `;
 
-                    // In your form submission handler
-                    try {
-                        const response = await fetch('/calculate-costs', {
-                            method: 'POST',
-                            body: formData
-                        });
+                        try {
+                            const response = await fetch('/calculate-costs', {
+                                method: 'POST',
+                                body: formData
+                            });
 
-                        const data = await response.json();
+                            const data = await response.json();
+                            if (data.error) throw new Error(data.error);
 
-                        if (data.error) {
-                            throw new Error(data.error);
-                        }
+                            // Store data globally
+                            calculatorData = data;
 
-                        // Show results section
-                        const resultsSection = document.getElementById('resultsSection');
-                        resultsSection.classList.remove('hidden');
-                        resultsSection.scrollIntoView({ behavior: 'smooth' });
+                            // Show results section
+                            const resultsSection = document.getElementById('resultsSection');
+                            resultsSection.classList.remove('hidden');
+                            resultsSection.scrollIntoView({ behavior: 'smooth' });
 
-                        // Update all sections
-                        updateSummaryCards(data);
-                        updateMonthlyBreakdown(data.monthly_costs);
-                        updateTabContent('academicTab', data);
-                        updateTabContent('setupTab', data);  // Make sure this is called
-                        updateTabContent('savingsTab', data); // Make sure this is called
+                            // Update all sections
+                            updateAllSections(data);
 
-                    } catch (error) {
-                        showError(error.message || 'Error calculating costs');
-                    } finally {
-                        // Reset button
-                        submitButton.disabled = false;
-                        submitButton.innerHTML = `
+                        } catch (error) {
+                            showError(error.message || 'Error calculating costs');
+                        } finally {
+                            // Reset button
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = `
             <i data-feather="trending-up" class="w-5 h-5 mr-2"></i>
             Calculate Costs
         `;
-                        feather.replace();
+                            feather.replace();
+                        }
                     }
-                });
-                // Tab switching functionality
-                document.querySelectorAll('.tab-button').forEach(button => {
-                    button.addEventListener('click', () => {
-                        // Remove active class from all buttons and contents
-                        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active', 'text-blue-600', 'border-b-2', 'border-blue-600'));
-                        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
 
-                        // Add active class to clicked button
+                    // Handle tab switching
+                    function handleTabSwitch(button) {
+                        // Update tab buttons
+                        document.querySelectorAll('.tab-button').forEach(b => {
+                            b.classList.remove('active', 'text-blue-600', 'border-b-2', 'border-blue-600');
+                            b.classList.add('text-gray-600');
+                        });
+                        button.classList.remove('text-gray-600');
                         button.classList.add('active', 'text-blue-600', 'border-b-2', 'border-blue-600');
 
-                        // Show corresponding content
-                        const tabId = button.dataset.tab + 'Tab';
+                        // Update tab content visibility
+                        document.querySelectorAll('.tab-content').forEach(content => {
+                            content.classList.add('hidden');
+                        });
+                        const tabId = button.getAttribute('data-tab') + 'Tab';
                         document.getElementById(tabId).classList.remove('hidden');
 
-                        // Refresh charts if necessary
-                        if (charts[button.dataset.tab]) {
-                            charts[button.dataset.tab].update();
+                        // Update content if we have data
+                        if (calculatorData) {
+                            updateTabContent(button.getAttribute('data-tab'));
                         }
-                    });
-                });
-                // Add these to your existing JavaScript
-                function updateSetupCosts(oneTimeCosts) {
-                    // Visa & Immigration Section
-                    const visaContainer = document.getElementById('visaCosts');
-                    if (oneTimeCosts?.visa) {
-                        visaContainer.innerHTML = `
-            <div class="space-y-4">
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="font-medium">Visa Application</span>
-                        <span class="text-blue-600 font-bold">${formatCurrency(oneTimeCosts.visa.amount)}</span>
-                    </div>
-                    <p class="text-sm text-gray-600">${oneTimeCosts.visa.details}</p>
-                    ${oneTimeCosts.visa.additional_fees ? `
-                        <div class="mt-3 space-y-2 border-t pt-2">
-                            <p class="text-xs font-medium text-gray-500">Additional Fees:</p>
-                            ${oneTimeCosts.visa.additional_fees.map(fee => `
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">${fee.type}</span>
-                                    <span class="font-medium">${formatCurrency(fee.cost)}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : ''}
-                </div>
-            </div>
-        `;
                     }
 
-                    // Housing Setup Section
-                    const housingContainer = document.getElementById('housingSetup');
-                    if (oneTimeCosts?.setup) {
-                        housingContainer.innerHTML = `
-            <div class="space-y-4">
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="font-medium">Initial Setup</span>
-                        <span class="text-blue-600 font-bold">${formatCurrency(oneTimeCosts.setup.amount)}</span>
-                    </div>
-                    <p class="text-sm text-gray-600">${oneTimeCosts.setup.details}</p>
-                    ${oneTimeCosts.setup.breakdown ? `
-                        <div class="mt-3 space-y-2 border-t pt-2">
-                            <p class="text-xs font-medium text-gray-500">Cost Breakdown:</p>
-                            ${Object.entries(oneTimeCosts.setup.breakdown).map(([item, cost]) => `
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">${formatCategoryName(item)}</span>
-                                    <span class="font-medium">${formatCurrency(cost)}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : ''}
-                </div>
-            </div>
-        `;
+                    // Update content for specific tab
+                    function updateTabContent(tabId) {
+                        switch (tabId) {
+                            case 'monthly':
+                                updateMonthlyBreakdown(calculatorData.monthly_costs);
+                                break;
+                            case 'academic':
+                                updateAcademicCosts(calculatorData.yearly_costs);
+                                break;
+                            case 'setup':
+                                updateSetupCosts(calculatorData.one_time_costs);
+                                break;
+                            case 'savings':
+                                updateSavingsInfo(calculatorData.savings_opportunities, calculatorData.financial_aid);
+                                break;
+                        }
                     }
 
-                    // Timeline Section
-                    const timelineContainer = document.getElementById('expenseTimeline');
-                    timelineContainer.innerHTML = `
+                    // Update all sections
+                    function updateAllSections(data) {
+                        updateSummaryCards(data.totals);
+                        updateMonthlyBreakdown(data.monthly_costs);
+                        updateAcademicCosts(data.yearly_costs);
+                        updateSetupCosts(data.one_time_costs);
+                        updateSavingsInfo(data.savings_opportunities, data.financial_aid);
+                    }
+
+                    // Update summary cards
+                    function updateSummaryCards(totals) {
+                        document.getElementById('monthlyTotal').textContent = totals.monthly.display_amount;
+                        document.getElementById('yearlyAcademic').textContent = totals.yearly.display_amount;
+                        document.getElementById('livingExpenses').textContent = formatCurrency(totals.monthly.amount * 12);
+                        document.getElementById('totalInvestment').textContent = totals.first_year.display_amount;
+                    }
+
+                    // Update monthly breakdown
+                    function updateMonthlyBreakdown(monthlyData) {
+                        // Update monthly distribution chart
+                        const ctx = document.getElementById('monthlyDistributionChart').getContext('2d');
+
+                        // Destroy existing chart if it exists
+                        if (charts.monthlyDistribution) {
+                            charts.monthlyDistribution.destroy();
+                        }
+
+                        const labels = Object.keys(monthlyData).map(key => formatCategoryName(key));
+                        const amounts = Object.values(monthlyData).map(item => item.amount);
+                        const total = amounts.reduce((a, b) => a + b, 0);
+
+                        charts.monthlyDistribution = new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    data: amounts,
+                                    backgroundColor: [
+                                        'rgba(59, 130, 246, 0.7)',
+                                        'rgba(16, 185, 129, 0.7)',
+                                        'rgba(249, 115, 22, 0.7)',
+                                        'rgba(139, 92, 246, 0.7)',
+                                        'rgba(236, 72, 153, 0.7)'
+                                    ]
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    legend: {
+                                        position: 'right',
+                                        labels: {
+                                            generateLabels: (chart) => {
+                                                return chart.data.labels.map((label, i) => ({
+                                                    text: `${label} (${((chart.data.datasets[0].data[i] / total) * 100).toFixed(1)}%)`,
+                                                    fillStyle: chart.data.datasets[0].backgroundColor[i],
+                                                    hidden: false,
+                                                    index: i
+                                                }));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+
+                        // Update breakdown list
+                        const breakdownContainer = document.getElementById('monthlyBreakdown');
+                        breakdownContainer.innerHTML = Object.entries(monthlyData)
+                            .map(([category, data]) => generateMonthlyBreakdownHTML(category, data))
+                            .join('');
+
+                        feather.replace();
+                    }
+
+                    // Update academic costs
+                    function updateAcademicCosts(yearlyData) {
+                        if (!yearlyData?.tuition?.variations) return;
+
+                        // Update program costs chart
+                        const ctx = document.getElementById('programCostsChart').getContext('2d');
+
+                        if (charts.programCosts) {
+                            charts.programCosts.destroy();
+                        }
+
+                        const programData = yearlyData.tuition.variations;
+
+                        charts.programCosts = new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: programData.map(p => p.program),
+                                datasets: [{
+                                    label: 'Annual Tuition',
+                                    data: programData.map(p => p.amount),
+                                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                                    borderColor: 'rgb(59, 130, 246)',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: {
+                                            callback: value => formatCurrency(value)
+                                        }
+                                    }
+                                }
+                            }
+                        });
+
+                        // Update other academic sections
+                        updateMandatoryFees(yearlyData.academic_fees);
+                        updateMaterials(yearlyData.materials);
+                        updatePaymentSchedule();
+                    }
+
+                    // Update setup costs
+                    function updateSetupCosts(setupData) {
+                        const visaContainer = document.getElementById('visaCosts');
+                        const housingContainer = document.getElementById('housingSetup');
+                        const timelineContainer = document.getElementById('expenseTimeline');
+
+                        if (setupData?.visa) {
+                            visaContainer.innerHTML = generateVisaCostsHTML(setupData.visa);
+                            housingContainer.innerHTML = generateHousingSetupHTML(setupData.setup);
+                            timelineContainer.innerHTML = generateTimelineHTML();
+                        }
+                    }
+
+                    // Update savings and aid information
+                    function updateSavingsInfo(savings, financialAid) {
+                        if (financialAid?.scholarships) {
+                            document.getElementById('scholarships').innerHTML =
+                                generateScholarshipsHTML(financialAid.scholarships);
+                        }
+
+                        if (financialAid?.work_study) {
+                            document.getElementById('workOpportunities').innerHTML =
+                                generateWorkOpportunitiesHTML(financialAid.work_study);
+                        }
+
+                        if (savings) {
+                            document.getElementById('costReduction').innerHTML =
+                                generateSavingsHTML(savings);
+                        }
+                    }
+
+                    // Helper functions
+                    function formatCurrency(amount) {
+                        return new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                        }).format(amount);
+                    }
+
+                    function formatCategoryName(category) {
+                        return category
+                            .split('_')
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(' ');
+                    }
+
+                    function showError(message) {
+                        const alert = document.createElement('div');
+                        alert.className = 'fixed top-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg';
+                        alert.innerHTML = `
+        <div class="flex items-center">
+            <i data-feather="alert-circle" class="w-5 h-5 mr-2"></i>
+            <p>${message}</p>
+        </div>
+    `;
+                        document.body.appendChild(alert);
+                        feather.replace();
+
+                        setTimeout(() => {
+                            alert.remove();
+                        }, 5000);
+                    }
+
+                    // HTML Generator functions for each section
+                    function generateMonthlyBreakdownHTML(category, data) {
+                        return `
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <div class="flex justify-between items-center mb-2">
+                <h4 class="font-medium text-gray-900 capitalize flex items-center">
+                    <i data-feather="${getCategoryIcon(category)}" class="w-4 h-4 mr-2"></i>
+                    ${formatCategoryName(category)}
+                </h4>
+                <span class="text-lg font-bold text-blue-600">${formatCurrency(data.amount)}</span>
+            </div>
+            <p class="text-sm text-gray-600">${data.details}</p>
+            ${generateBreakdownHTML(data.breakdown)}
+            ${generateOptionsHTML(data.options)}
+        </div>
+    `;
+                    }
+
+                    // Category icon mapping
+                    function getCategoryIcon(category) {
+                        const icons = {
+                            accommodation: 'home',
+                            food: 'coffee',
+                            transport: 'map',
+                            utilities: 'zap',
+                            personal: 'user',
+                            study: 'book',
+                            entertainment: 'music',
+                            health: 'heart',
+                            default: 'circle'
+                        };
+                        return icons[category] || icons.default;
+                    }
+
+                    // Generate breakdown section HTML
+                    function generateBreakdownHTML(breakdown) {
+                        if (!breakdown) return '';
+
+                        return `
+        <div class="mt-2 pt-2 border-t border-gray-200">
+            <p class="text-xs font-medium text-gray-500 mb-1">Breakdown:</p>
+            <div class="grid grid-cols-2 gap-2">
+                ${Object.entries(breakdown)
+                                .map(([item, cost]) => `
+                        <div class="flex justify-between">
+                            <span class="text-xs text-gray-600">${formatCategoryName(item)}</span>
+                            <span class="text-xs font-medium">${formatCurrency(cost)}</span>
+                        </div>
+                    `).join('')}
+            </div>
+        </div>
+    `;
+                    }
+
+                    // Generate options section HTML
+                    function generateOptionsHTML(options) {
+                        if (!options) return '';
+
+                        return `
+        <div class="mt-2 pt-2 border-t border-gray-200">
+            <p class="text-xs font-medium text-gray-500 mb-1">Available Options:</p>
+            <div class="space-y-1">
+                ${options.map(option => `
+                    <div class="flex justify-between">
+                        <span class="text-xs text-gray-600">${option.type}</span>
+                        <span class="text-xs font-medium">${formatCurrency(option.cost)}</span>
+                    </div>
+                    ${option.notes ? `<p class="text-xs text-gray-500">${option.notes}</p>` : ''}
+                `).join('')}
+            </div>
+        </div>
+    `;
+                    }
+
+                    // Generate mandatory fees HTML
+                    function updateMandatoryFees(fees) {
+                        const container = document.getElementById('mandatoryFees');
+                        if (!fees?.breakdown) {
+                            container.innerHTML = '<p class="text-gray-500">No mandatory fees information available</p>';
+                            return;
+                        }
+
+                        container.innerHTML = Object.entries(fees.breakdown)
+                            .map(([fee, amount]) => `
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex justify-between items-center">
+                    <span class="font-medium">${formatCategoryName(fee)}</span>
+                    <span class="text-blue-600 font-bold">${formatCurrency(amount)}</span>
+                </div>
+                <p class="text-sm text-gray-600 mt-1">Per academic year</p>
+            </div>
+        `).join('');
+                    }
+
+                    // Generate materials section HTML
+                    function updateMaterials(materials) {
+                        const container = document.getElementById('programMaterials');
+                        container.innerHTML = `
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <h4 class="font-medium mb-2">Estimated Course Materials</h4>
+            <div class="flex justify-between items-center">
+                <span>Books and Supplies</span>
+                <span class="text-blue-600 font-bold">${formatCurrency(materials?.amount || 0)}</span>
+            </div>
+        </div>
+    `;
+                    }
+
+                    // Generate payment schedule HTML
+                    function updatePaymentSchedule() {
+                        const container = document.getElementById('paymentSchedule');
+                        container.innerHTML = `
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <h4 class="font-medium mb-2">Payment Deadlines</h4>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <span>Fall Semester</span>
+                    <span class="text-blue-600">August 1st</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span>Spring Semester</span>
+                    <span class="text-blue-600">December 1st</span>
+                </div>
+            </div>
+        </div>
+    `;
+                    }
+
+                    // Generate visa costs HTML
+                    function generateVisaCostsHTML(visa) {
+                        return `
+        <div class="space-y-4">
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-medium">Visa Application</span>
+                    <span class="text-blue-600 font-bold">${formatCurrency(visa.amount)}</span>
+                </div>
+                <p class="text-sm text-gray-600">${visa.details}</p>
+                ${visa.additional_fees ? `
+                    <div class="mt-3 space-y-2 border-t pt-2">
+                        <p class="text-xs font-medium text-gray-500">Additional Fees:</p>
+                        ${visa.additional_fees.map(fee => `
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">${fee.type}</span>
+                                <span class="font-medium">${formatCurrency(fee.cost)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+                    }
+
+                    // Generate housing setup HTML
+                    function generateHousingSetupHTML(setup) {
+                        return `
+        <div class="space-y-4">
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-medium">Initial Setup</span>
+                    <span class="text-blue-600 font-bold">${formatCurrency(setup.amount)}</span>
+                </div>
+                <p class="text-sm text-gray-600">${setup.details}</p>
+                ${setup.breakdown ? `
+                    <div class="mt-3 space-y-2 border-t pt-2">
+                        <p class="text-xs font-medium text-gray-500">Cost Breakdown:</p>
+                        ${Object.entries(setup.breakdown).map(([item, cost]) => `
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">${formatCategoryName(item)}</span>
+                                <span class="font-medium">${formatCurrency(cost)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+                    }
+
+                    // Generate timeline HTML
+                    function generateTimelineHTML() {
+                        return `
         <div class="relative">
             <div class="absolute left-0 w-1 bg-blue-200 h-full"></div>
             <div class="space-y-8 pl-6">
@@ -713,386 +825,85 @@
             </div>
         </div>
     `;
-                }
-
-                function updateSavingsInfo(savingsOpportunities, financialAid) {
-                    // Scholarships Section
-                    const scholarshipsContainer = document.getElementById('scholarships');
-                    if (financialAid?.scholarships) {
-                        scholarshipsContainer.innerHTML = `
-            <div class="space-y-4">
-                ${financialAid.scholarships.map(scholarship => `
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="font-medium">${scholarship.type}</span>
-                            <span class="text-blue-600 font-bold">${scholarship.amount}</span>
-                        </div>
-                        <p class="text-sm text-gray-600 mb-2">${scholarship.eligibility}</p>
-                        <div class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded inline-block">
-                            Deadline: ${scholarship.deadline || 'Rolling'}
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
                     }
 
-                    // Work Opportunities Section
-                    const workContainer = document.getElementById('workOpportunities');
-                    if (financialAid?.work_study) {
-                        workContainer.innerHTML = `
-            <div class="space-y-4">
+                    // Generate scholarships HTML
+                    function generateScholarshipsHTML(scholarships) {
+                        return `
+        <div class="space-y-4">
+            ${scholarships.map(scholarship => `
                 <div class="bg-gray-50 p-4 rounded-lg">
-                    <h4 class="font-medium mb-3">Student Work Options</h4>
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">Working Hours</span>
-                            <span class="font-medium">${financialAid.work_study.hours_per_week}</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">Typical Pay Rate</span>
-                            <span class="font-medium">${financialAid.work_study.typical_wage}/hr</span>
-                        </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-medium">${scholarship.type}</span>
+                        <span class="text-blue-600 font-bold">${scholarship.amount}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-2">${scholarship.eligibility}</p>
+                    <div class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded inline-block">
+                        Deadline: ${scholarship.deadline || 'Rolling'}
                     </div>
                 </div>
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <p class="text-sm text-blue-700">
-                        <i data-feather="info" class="w-4 h-4 inline mr-1"></i>
-                        International students can typically work up to 20 hours/week during semester
-                    </p>
-                </div>
-            </div>
-        `;
-                    }
-
-                    // Cost Reduction Strategies Section
-                    const reductionContainer = document.getElementById('costReduction');
-                    if (savingsOpportunities) {
-                        reductionContainer.innerHTML = `
-            <div class="space-y-4">
-                ${savingsOpportunities.map(opportunity => `
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="font-medium">${opportunity.category}</span>
-                            <span class="text-blue-600 font-bold">Save ${opportunity.potential_saving}</span>
-                        </div>
-                        <p class="text-sm text-gray-600">${opportunity.strategy}</p>
-                    </div>
-                `).join('')}
-                <div class="bg-green-50 p-4 rounded-lg">
-                    <p class="text-sm text-green-700">
-                        <i data-feather="trending-down" class="w-4 h-4 inline mr-1"></i>
-                        Implementing these strategies could reduce your total costs by 20-30%
-                    </p>
-                </div>
-            </div>
-        `;
-                    }
-
-                    // Refresh Feather icons
-                    feather.replace();
-                }
-                // Enhanced form submission handler
-                document.getElementById('costCalculatorForm').addEventListener('submit', async (e) => {
-                    e.preventDefault();
-
-                    const formData = new FormData(e.target);
-                    const submitButton = e.target.querySelector('button[type="submit"]');
-
-                    // Show loading state
-                    submitButton.disabled = true;
-                    submitButton.innerHTML = `
-        <svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-        </svg>
-        Calculating...
-    `;
-
-                    try {
-                        const response = await fetch('/calculate-costs', {
-                            method: 'POST',
-                            body: formData
-                        });
-
-                        const data = await response.json();
-
-                        if (data.error) {
-                            throw new Error(data.error);
-                        }
-
-                        // Show results section with animation
-                        const resultsSection = document.getElementById('resultsSection');
-                        resultsSection.classList.remove('hidden');
-                        resultsSection.scrollIntoView({ behavior: 'smooth' });
-
-                        // Update all sections
-                        updateSummaryCards(data);
-                        updateMonthlyBreakdown(data.monthly_costs);
-                        updateAcademicCosts(data.yearly_costs);
-                        updateSetupCosts(data.one_time_costs);
-                        updateSavingsInfo(data.savings_opportunities, data.financial_aid);
-                        updateLocalContext(data.local_cost_context);
-                        updateTabContent('setupTab', data);  // Make sure this is called
-                        updateTabContent('savingsTab', data); // Make sure this is called
-
-                    } catch (error) {
-                        showError(error.message || 'Error calculating costs');
-                    } finally {
-                        // Reset button
-                        submitButton.disabled = false;
-                        submitButton.innerHTML = `
-            <i data-feather="trending-up" class="w-5 h-5 mr-2"></i>
-            Calculate Costs
-        `;
-                        feather.replace();
-                    }
-                });
-
-                // Update summary cards with animations
-                function updateSummaryCards(data) {
-                    animateValue('monthlyTotal', data.totals.monthly.amount, {
-                        prefix: '$',
-                        duration: 1000,
-                        useGrouping: true
-                    });
-
-                    animateValue('yearlyAcademic', data.totals.yearly.amount, {
-                        prefix: '$',
-                        duration: 1000,
-                        useGrouping: true
-                    });
-
-                    animateValue('livingExpenses', data.totals.monthly.amount * 12, {
-                        prefix: '$',
-                        duration: 1000,
-                        useGrouping: true
-                    });
-
-                    animateValue('totalInvestment', data.totals.first_year.amount, {
-                        prefix: '$',
-                        duration: 1000,
-                        useGrouping: true
-                    });
-                }
-
-                // Enhanced monthly breakdown with detailed information
-                function updateMonthlyBreakdown(monthlyData) {
-                    const container = document.getElementById('monthlyBreakdown');
-                    container.innerHTML = '';
-
-                    Object.entries(monthlyData).forEach(([category, data]) => {
-                        const card = document.createElement('div');
-                        card.className = 'bg-gray-50 rounded-lg p-4 transform transition-all hover:scale-[1.02] space-y-3';
-
-                        // Main cost info
-                        const mainInfo = `
-            <div class="flex items-center justify-between mb-2">
-                <h4 class="font-medium text-gray-900 capitalize flex items-center">
-                    <i data-feather="${getCategoryIcon(category)}" class="w-4 h-4 mr-2"></i>
-                    ${formatCategoryName(category)}
-                </h4>
-                <span class="text-lg font-bold text-blue-600">${formatCurrency(data.amount)}</span>
-            </div>
-            <p class="text-sm text-gray-600">${data.details}</p>
-        `;
-
-                        // Breakdown if available
-                        let breakdownHtml = '';
-                        if (data.breakdown) {
-                            breakdownHtml = `
-                <div class="mt-2 pt-2 border-t border-gray-200">
-                    <p class="text-xs font-medium text-gray-500 mb-1">Breakdown:</p>
-                    <div class="grid grid-cols-2 gap-2">
-                        ${Object.entries(data.breakdown)
-                                    .map(([item, cost]) => `
-                                <div class="flex justify-between">
-                                    <span class="text-xs text-gray-600">${formatCategoryName(item)}</span>
-                                    <span class="text-xs font-medium">${formatCurrency(cost)}</span>
-                                </div>
-                            `).join('')}
-                    </div>
-                </div>
-            `;
-                        }
-
-                        // Options if available
-                        let optionsHtml = '';
-                        if (data.options) {
-                            optionsHtml = `
-                <div class="mt-2 pt-2 border-t border-gray-200">
-                    <p class="text-xs font-medium text-gray-500 mb-1">Available Options:</p>
-                    <div class="space-y-1">
-                        ${data.options
-                                    .map(option => `
-                                <div class="flex justify-between">
-                                    <span class="text-xs text-gray-600">${option.type}</span>
-                                    <span class="text-xs font-medium">${formatCurrency(option.cost)}</span>
-                                </div>
-                            `).join('')}
-                    </div>
-                </div>
-            `;
-                        }
-
-                        card.innerHTML = mainInfo + breakdownHtml + optionsHtml;
-                        container.appendChild(card);
-                    });
-
-                    feather.replace();
-                    updateMonthlyChart(monthlyData);
-                }
-
-                // Update the monthly distribution chart
-                function updateMonthlyChart(monthlyData) {
-                    const ctx = document.getElementById('monthlyDistributionChart').getContext('2d');
-
-                    if (charts.monthlyDistribution) {
-                        charts.monthlyDistribution.destroy();
-                    }
-
-                    const labels = Object.keys(monthlyData).map(key => formatCategoryName(key));
-                    const amounts = Object.values(monthlyData).map(item => item.amount);
-                    const total = amounts.reduce((a, b) => a + b, 0);
-
-                    charts.monthlyDistribution = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                data: amounts,
-                                backgroundColor: [
-                                    'rgba(59, 130, 246, 0.7)',   // Blue
-                                    'rgba(16, 185, 129, 0.7)',   // Green
-                                    'rgba(249, 115, 22, 0.7)',   // Orange
-                                    'rgba(139, 92, 246, 0.7)',   // Purple
-                                    'rgba(236, 72, 153, 0.7)',   // Pink
-                                    'rgba(245, 158, 11, 0.7)'    // Yellow
-                                ],
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    position: 'right',
-                                    labels: {
-                                        font: {
-                                            size: 12
-                                        },
-                                        generateLabels: (chart) => {
-                                            const data = chart.data;
-                                            return data.labels.map((label, i) => ({
-                                                text: `${label} (${((data.datasets[0].data[i] / total) * 100).toFixed(1)}%)`,
-                                                fillStyle: data.datasets[0].backgroundColor[i],
-                                                hidden: false,
-                                                index: i
-                                            }));
-                                        }
-                                    }
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: (context) => {
-                                            const value = context.raw;
-                                            const percentage = ((value / total) * 100).toFixed(1);
-                                            return `${formatCurrency(value)} (${percentage}%)`;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
-
-                // Helper functions
-                function formatCategoryName(category) {
-                    return category
-                        .split('_')
-                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                        .join(' ');
-                }
-
-                function formatCurrency(amount) {
-                    return new Intl.NumberFormat('en-US', {
-                        style: 'currency',
-                        currency: 'USD',
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0
-                    }).format(amount);
-                }
-
-                function getCategoryIcon(category) {
-                    const icons = {
-                        accommodation: 'home',
-                        food: 'coffee',
-                        transport: 'map',
-                        utilities: 'zap',
-                        personal: 'user',
-                        study: 'book',
-                        entertainment: 'music',
-                        health: 'heart',
-                        default: 'circle'
-                    };
-                    return icons[category] || icons.default;
-                }
-
-                function animateValue(elementId, endValue, options = {}) {
-                    const element = document.getElementById(elementId);
-                    const startValue = 0;
-                    const duration = options.duration || 1000;
-                    const startTime = performance.now();
-
-                    function updateValue(currentTime) {
-                        const elapsed = currentTime - startTime;
-                        const progress = Math.min(elapsed / duration, 1);
-
-                        const value = Math.floor(startValue + (endValue - startValue) * progress);
-                        element.textContent = formatCurrency(value);
-
-                        if (progress < 1) {
-                            requestAnimationFrame(updateValue);
-                        }
-                    }
-
-                    requestAnimationFrame(updateValue);
-                }
-
-                function showError(message) {
-                    const alert = document.createElement('div');
-                    alert.className = 'fixed top-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg';
-                    alert.innerHTML = `
-        <div class="flex items-center">
-            <i data-feather="alert-circle" class="w-5 h-5 mr-2"></i>
-            <p>${message}</p>
+            `).join('')}
         </div>
     `;
-                    document.body.appendChild(alert);
-                    feather.replace();
+                    }
 
-                    setTimeout(() => {
-                        alert.remove();
-                    }, 5000);
-                }
-                // When the Setup & One-time tab is clicked
-                document.querySelector('[data-tab="setup"]').addEventListener('click', async () => {
-                    const response = await fetch('/setup-costs', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await response.json();
-                    // Update the UI with the data
-                });
+                    // Generate work opportunities HTML
+                    function generateWorkOpportunitiesHTML(workStudy) {
+                        return `
+        <div class="space-y-4">
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="font-medium mb-3">Student Work Options</h4>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Working Hours</span>
+                        <span class="font-medium">${workStudy.hours_per_week}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Typical Pay Rate</span>
+                        <span class="font-medium">${workStudy.typical_wage}/hr</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <p class="text-sm text-blue-700">
+                    <i data-feather="info" class="w-4 h-4 inline mr-1"></i>
+                    International students can typically work up to 20 hours/week during semester
+                </p>
+            </div>
+        </div>
+    `;
+                    }
 
-                // When the Savings & Aid tab is clicked
-                document.querySelector('[data-tab="savings"]').addEventListener('click', async () => {
-                    const response = await fetch('/savings-opportunities', {
-                        method: 'POST',
-                        body: formData
+                    // Generate savings HTML
+                    function generateSavingsHTML(savings) {
+                        return `
+        <div class="space-y-4">
+            ${savings.map(opportunity => `
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-medium">${opportunity.category}</span>
+                        <span class="text-blue-600 font-bold">Save ${opportunity.potential_saving}</span>
+                    </div>
+                    <p class="text-sm text-gray-600">${opportunity.strategy}</p>
+                </div>
+            `).join('')}
+            <div class="bg-green-50 p-4 rounded-lg">
+                <p class="text-sm text-green-700">
+                    <i data-feather="trending-down" class="w-4 h-4 inline mr-1"></i>
+                    Implementing these strategies could reduce your total costs by 20-30%
+                </p>
+            </div>
+        </div>
+    `;
+                    }
+
+                    // Initialize the calculator when the page loads
+                    document.addEventListener('DOMContentLoaded', () => {
+                        // Set initial active tab
+                        const defaultTab = document.querySelector('[data-tab="monthly"]');
+                        if (defaultTab) {
+                            handleTabSwitch(defaultTab);
+                        }
                     });
-                    const data = await response.json();
-                    // Update the UI with the data
-                });
-            </script>
+                </script>
 </body>

@@ -1266,266 +1266,211 @@ cost_calculator = UniversalCostCalculator()
 
 @app.route('/calculate-costs', methods=['POST'])
 def calculate_costs():
+    """Calculate university costs using Gemini"""
     try:
         university = request.form.get('university')
         country = request.form.get('country')
         
         if not university or not country:
             return jsonify({"error": "University and country are required"}), 400
-            
-        costs = cost_calculator.calculate_costs(university, country)
-        
-        # Make sure the response includes all required sections
-        costs.update({
-            "one_time_costs": {
-                "visa": {
-                    "amount": 500,
-                    "details": "Student visa application fee",
-                    "additional_fees": [
-                        {"type": "Processing", "cost": 100},
-                        {"type": "Documentation", "cost": 50}
-                    ]
-                },
-                "setup": {
-                    "amount": 2000,
-                    "details": "Initial housing and setup costs",
-                    "breakdown": {
-                        "housing_deposit": 1000,
-                        "furniture": 500,
-                        "utilities_setup": 500
-                    }
-                }
-            },
-            "savings_opportunities": [
-                {
-                    "category": "Housing",
-                    "potential_saving": "$200-400",
-                    "strategy": "Choose shared accommodation"
-                },
-                {
-                    "category": "Food",
-                    "potential_saving": "$100-200",
-                    "strategy": "Cook at home and use meal plan"
-                }
-            ],
-            "financial_aid": {
-                "scholarships": [
-                    {
-                        "type": "Merit Scholarship",
-                        "amount": "$5,000-15,000",
-                        "eligibility": "High academic achievement"
-                    },
-                    {
-                        "type": "Need-based Aid",
-                        "amount": "$3,000-10,000",
-                        "eligibility": "Financial need"
-                    }
-                ],
-                "work_study": {
-                    "hours_per_week": "20",
-                    "typical_wage": "$15-20"
-                }
-            }
-        })
-        
-        return jsonify(costs)
-        
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500    
-@app.route('/academic-costs', methods=['POST'])
-def get_academic_costs():
-    """Get detailed breakdown of academic costs"""
-    try:
-        university = request.form.get('university')
-        country = request.form.get('country')
-        
-        if not university or not country:
-            return jsonify({"error": "University and country are required"}), 400
-            
-        prompt = f"""Provide detailed academic costs for {university} in {country}.
-        Include the following:
-        1. Exact tuition fees for different programs
-        2. All mandatory academic fees
-        3. Program-specific costs
-        4. Lab and materials fees
-        5. Semester/annual breakdown
-        
-        Return in this exact JSON format:
+
+        # Create Gemini model instance
+        model = genai.GenerativeModel('gemini-pro')
+
+        # Get cost data
+        cost_prompt = f"""Return exact verified costs for {university} in {country} in USD as JSON:
         {{
-            "tuition_breakdown": [
-                {{
-                    "program": "Program name",
-                    "annual_fee": "Exact amount in USD",
-                    "details": "Program details",
-                    "additional_fees": [
-                        {{"name": "Fee name", "amount": "Amount in USD", "frequency": "One-time/Annual/Semester"}}
+            "monthly_costs": {{
+                "accommodation": {{"amount": 1200, "details": "Housing costs", "options": []}},
+                "food": {{"amount": 500, "details": "Food costs", "breakdown": {{}}}},
+                "transport": {{"amount": 100, "details": "Transport costs", "options": []}},
+                "utilities": {{"amount": 150, "details": "Utility costs", "breakdown": {{}}}},
+                "personal": {{"amount": 300, "details": "Personal costs", "breakdown": {{}}}}
+            }},
+            "yearly_costs": {{
+                "tuition": {{
+                    "amount": 25000,
+                    "details": "Annual tuition",
+                    "variations": [
+                        {{"program": "Undergraduate", "amount": 20000}},
+                        {{"program": "Masters", "amount": 25000}},
+                        {{"program": "PhD", "amount": 15000}}
                     ]
+                }},
+                "academic_fees": {{
+                    "amount": 2000,
+                    "details": "Academic fees",
+                    "breakdown": {{
+                        "registration": 500,
+                        "facility": 500,
+                        "technology": 500,
+                        "student_services": 500
+                    }}
+                }},
+                "materials": {{
+                    "amount": 1000,
+                    "details": "Books and supplies"
                 }}
-            ],
-            "mandatory_fees": [
-                {{
-                    "name": "Fee name",
-                    "amount": "Amount in USD",
-                    "description": "Fee details",
-                    "frequency": "One-time/Annual/Semester"
-                }}
-            ],
-            "program_materials": [
-                {{
-                    "program": "Program name",
-                    "materials": [
-                        {{"item": "Item name", "cost": "Cost in USD", "frequency": "One-time/Annual/Semester"}}
-                    ]
-                }}
-            ]
+            }}
         }}"""
-        
-        response = cost_calculator.model.generate_content(prompt)
-        costs = json.loads(response.text)
-        return jsonify(costs)
-        
-    except Exception as e:
-        app.logger.error(f"Error fetching academic costs: {str(e)}")
-        return jsonify({"error": "Failed to fetch academic costs"}), 500
 
-@app.route('/setup-costs', methods=['POST'])
-def get_setup_costs():
-    """Get detailed breakdown of one-time setup costs"""
-    try:
-        university = request.form.get('university')
-        country = request.form.get('country')
+        # Get response from Gemini
+        cost_response = model.generate_content(cost_prompt)
         
-        if not university or not country:
-            return jsonify({"error": "University and country are required"}), 400
-            
-        # Setup costs data structure
-        setup_costs = {
-            "visa_costs": [
-                {
-                    "item": "Student Visa Application",
-                    "amount": 500,
-                    "timeline": "3-4 months before departure",
-                    "notes": "Processing time varies by country"
-                },
-                {
-                    "item": "Health Check",
-                    "amount": 150,
-                    "timeline": "1-2 months before departure",
-                    "notes": "Required for visa application"
-                }
-            ],
-            "housing_setup": [
-                {
-                    "item": "Security Deposit",
-                    "amount": 1000,
-                    "required": True,
-                    "notes": "Refundable at end of lease"
-                },
-                {
-                    "item": "First Month's Rent",
-                    "amount": 1000,
-                    "required": True,
-                    "notes": "Due before move-in"
-                },
-                {
-                    "item": "Basic Furniture",
-                    "amount": 500,
-                    "required": False,
-                    "notes": "Essential items if unfurnished"
-                }
-            ],
-            "initial_expenses": [
-                {
-                    "category": "Documentation",
-                    "items": [
-                        {"name": "Document Translation", "amount": 100, "essential": True},
-                        {"name": "Notarization", "amount": 50, "essential": True}
-                    ]
-                },
-                {
-                    "category": "Travel",
-                    "items": [
-                        {"name": "Flight Ticket", "amount": 1000, "essential": True},
-                        {"name": "Airport Transfer", "amount": 50, "essential": True}
-                    ]
-                }
-            ]
-        }
+        # Clean and parse the response
+        cost_text = cost_response.text.strip()
+        if cost_text.startswith('```json'):
+            cost_text = cost_text[7:]
+        if cost_text.endswith('```'):
+            cost_text = cost_text[:-3]
         
-        return jsonify(setup_costs)
+        # Extract JSON using regex as fallback if needed
+        import re
+        json_match = re.search(r'({.*})', cost_text, re.DOTALL)
+        if json_match:
+            cost_text = json_match.group(1)
         
-    except Exception as e:
-        
-        return jsonify({"error": "Failed to fetch setup costs"}), 500
+        cost_data = json.loads(cost_text)
 
-@app.route('/savings-opportunities', methods=['POST'])
-def get_savings_opportunities():
-    """Get detailed breakdown of savings opportunities and financial aid"""
-    try:
-        university = request.form.get('university')
-        country = request.form.get('country')
+        # Get setup costs
+        setup_response = model.generate_content(f"""Return setup costs for {university} as JSON:
+        {{
+            "visa": {{
+                "amount": 500,
+                "details": "Visa fees",
+                "additional_fees": [
+                    {{"type": "Processing", "cost": 100}},
+                    {{"type": "Documentation", "cost": 50}}
+                ]
+            }},
+            "setup": {{
+                "amount": 2000,
+                "details": "Setup costs",
+                "breakdown": {{
+                    "housing_deposit": 1000,
+                    "furniture": 500,
+                    "utilities_setup": 500
+                }}
+            }}
+        }}""")
         
-        if not university or not country:
-            return jsonify({"error": "University and country are required"}), 400
+        setup_text = setup_response.text.strip()
+        if setup_text.startswith('```json'):
+            setup_text = setup_text[7:]
+        if setup_text.endswith('```'):
+            setup_text = setup_text[:-3]
+        
+        setup_match = re.search(r'({.*})', setup_text, re.DOTALL)
+        if setup_match:
+            setup_text = setup_match.group(1)
             
-        opportunities = {
-            "scholarships": [
-                {
-                    "type": "Merit Scholarship",
-                    "amount": "$5,000-15,000",
-                    "eligibility": "High academic achievement (GPA 3.5+)",
-                    "deadline": "March 1st",
-                    "details": "Based on academic performance"
-                },
-                {
-                    "type": "Need-based Aid",
-                    "amount": "$3,000-10,000",
-                    "eligibility": "Demonstrated financial need",
-                    "deadline": "Rolling basis",
-                    "details": "Based on family income"
-                }
-            ],
-            "work_opportunities": [
-                {
-                    "type": "Work Study",
-                    "earnings": "$15-20/hour",
-                    "hours": "20 hours/week",
-                    "positions": ["Library Assistant", "Research Assistant"],
-                    "requirements": ["Valid student visa", "Enrolled full-time"]
-                },
-                {
-                    "type": "Teaching Assistant",
-                    "earnings": "$18-25/hour",
-                    "hours": "10-15 hours/week",
-                    "positions": ["Lab TA", "Course TA"],
-                    "requirements": ["Good academic standing", "Department approval"]
-                }
-            ],
-            "cost_reduction": [
-                {
+        setup_data = json.loads(setup_text)
+
+        # Get savings data
+        savings_response = model.generate_content(f"""Return savings opportunities for {university} as JSON:
+        {{
+            "savings_opportunities": [
+                {{
                     "category": "Housing",
                     "potential_saving": "$200-400/month",
-                    "strategy": "Choose shared accommodation or apply for RA position"
-                },
-                {
-                    "category": "Food",
-                    "potential_saving": "$100-200/month",
-                    "strategy": "Use meal plan and cook at home"
-                },
-                {
-                    "category": "Transportation",
-                    "potential_saving": "$50-100/month",
-                    "strategy": "Use student transit pass"
-                }
-            ]
-        }
+                    "strategy": "Choose shared accommodation"
+                }}
+            ],
+            "financial_aid": {{
+                "scholarships": [
+                    {{
+                        "type": "Merit Scholarship",
+                        "amount": "$5,000-15,000",
+                        "eligibility": "High academic achievement",
+                        "deadline": "March 1st"
+                    }}
+                ],
+                "work_study": {{
+                    "hours_per_week": "20",
+                    "typical_wage": "$15-20"
+                }}
+            }}
+        }}""")
         
-        return jsonify(opportunities)
-        
-    except Exception as e:
-        
-        return jsonify({"error": "Failed to fetch savings opportunities"}), 500    
+        savings_text = savings_response.text.strip()
+        if savings_text.startswith('```json'):
+            savings_text = savings_text[7:]
+        if savings_text.endswith('```'):
+            savings_text = savings_text[:-3]
+            
+        savings_match = re.search(r'({.*})', savings_text, re.DOTALL)
+        if savings_match:
+            savings_text = savings_match.group(1)
+            
+        savings_data = json.loads(savings_text)
 
+        # Calculate totals
+        monthly_total = sum(item["amount"] for item in cost_data["monthly_costs"].values())
+        yearly_total = sum(item["amount"] for item in cost_data["yearly_costs"].values())
+        first_year_total = yearly_total + (monthly_total * 12)
+
+        # Compile complete response
+        response_data = {
+            "monthly_costs": cost_data["monthly_costs"],
+            "yearly_costs": cost_data["yearly_costs"],
+            "one_time_costs": setup_data,
+            "savings_opportunities": savings_data["savings_opportunities"],
+            "financial_aid": savings_data["financial_aid"],
+            "totals": {
+                "monthly": {
+                    "amount": monthly_total,
+                    "display_amount": f"${monthly_total:,.2f}"
+                },
+                "yearly": {
+                    "amount": yearly_total,
+                    "display_amount": f"${yearly_total:,.2f}"
+                },
+                "first_year": {
+                    "amount": first_year_total,
+                    "display_amount": f"${first_year_total:,.2f}"
+                }
+            }
+        }
+
+        return jsonify(response_data)
+
+    except json.JSONDecodeError as e:
+        app.logger.error(f"JSON parsing error: {str(e)}")
+        # Return fallback data instead of error
+        return jsonify({
+            "monthly_costs": {
+                "accommodation": {"amount": 1200, "details": "Estimated housing costs"},
+                "food": {"amount": 500, "details": "Estimated food costs"},
+                "transport": {"amount": 100, "details": "Estimated transport costs"},
+                "utilities": {"amount": 150, "details": "Estimated utility costs"},
+                "personal": {"amount": 300, "details": "Estimated personal costs"}
+            },
+            "yearly_costs": {
+                "tuition": {
+                    "amount": 25000,
+                    "details": "Estimated tuition",
+                    "variations": [
+                        {"program": "Undergraduate", "amount": 20000},
+                        {"program": "Masters", "amount": 25000},
+                        {"program": "PhD", "amount": 15000}
+                    ]
+                },
+                "academic_fees": {"amount": 2000, "details": "Estimated fees"},
+                "materials": {"amount": 1000, "details": "Estimated materials cost"}
+            },
+            "one_time_costs": {
+                "visa": {"amount": 500, "details": "Estimated visa fees"},
+                "setup": {"amount": 2000, "details": "Estimated setup costs"}
+            },
+            "totals": {
+                "monthly": {"amount": 2250, "display_amount": "$2,250"},
+                "yearly": {"amount": 28000, "display_amount": "$28,000"},
+                "first_year": {"amount": 55000, "display_amount": "$55,000"}
+            }
+        })
+    except Exception as e:
+        app.logger.error(f"Error calculating costs: {str(e)}")
+        return jsonify({"error": f"Failed to calculate costs: {str(e)}"}), 500
 @app.route('/export-cost-report', methods=['POST'])
 def export_cost_report():
     """Generate a comprehensive cost report for download"""
@@ -1537,10 +1482,6 @@ def export_cost_report():
             return jsonify({"error": "University and country are required"}), 400
             
         # Get all cost components
-        costs = cost_calculator.calculate_costs(university, country)
-        academic_costs = get_academic_costs().json
-        setup_costs = get_setup_costs().json
-        savings = get_savings_opportunities().json
         
         # Generate PDF report (implementation depends on your PDF library choice)
         # For example, using reportlab or WeasyPrint
