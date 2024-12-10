@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Cost Calculator - UNIVI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <!-- Add Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    {% include 'partials/firebaseconfig.html' %}
+    <style>
+        .icon-container {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .cost-card {
+            transition: all 0.3s ease;
+        }
+
+        .cost-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 400px;
+            width: 100%;
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #3b82f6;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        universitytext {
+            background: linear-gradient(to right,
+                    #ffffff 0%,
+                    #80a5eb 50%,
+                    #6e9aed 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+
+            background-size: 500% auto;
+            animation: textShine 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes textShine {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('/api/placeholder/1920/1080') center/cover;
+            opacity: 0.15;
+            mix-blend-mode: soft-light;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #3b82f6;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .hero-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(circle at 25px 25px, rgba(255, 255, 255, 0.2) 2%, transparent 0%),
+                radial-gradient(circle at 75px 75px, rgba(255, 255, 255, 0.2) 2%, transparent 0%);
+            background-size: 100px 100px;
+            opacity: 0.3;
+        }
+
+        .feature-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(229, 231, 235, 0.5);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            border-color: #3b82f6;
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #3b82f6;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .cta-button {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.5);
+        }
+
+        .step-card {
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(229, 231, 235, 0.5);
+        }
+
+        #mgtp {
+            margin-top: 100px;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    {% include 'partials/navigation.html' %}
+
+    <div class="pt-20 pb-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Header with Icon -->
+            <div class="text-center mb-10" id="mgtp">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">University Cost Calculator</h1>
+                <p class="text-xl text-gray-600 max-w-2xl mx-auto">Plan your education budget with our detailed cost
+                    estimator</p>
+            </div>
+
+            <!-- Calculator Form -->
+            <div class="max-w-3xl mx-auto">
+                <div class="bg-white rounded-xl shadow-lg p-8 mb-8 transform transition-all hover:scale-[1.01]">
+                    <form id="costCalculatorForm" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
+                            <div class="relative">
+                                <label for="university" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i data-feather="book" class="w-4 h-4 inline mr-2"></i>
+                                    University Name
+                                </label>
+                                <input type="text" id="university" name="university" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                            </div>
+                        </div>
+                        <button type="submit"
+                            class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg font-medium text-lg hover:bg-blue-700 transition duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                            <i data-feather="trending-up" class="w-5 h-5"></i>
+                            Calculate Costs
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Results Section -->
+                <div id="resultsSection" class="hidden space-y-8 animate-fade-in">
+                    <!-- Cost Overview Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <!-- Monthly Summary -->
+                        <div
+                            class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 shadow-md cost-card relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-blue-200 rounded-bl-full opacity-50"></div>
+                            <div class="flex items-center mb-3">
+                                <i data-feather="calendar" class="w-5 h-5 text-blue-600 mr-2"></i>
+                                <h3 class="text-lg font-semibold text-blue-800">Monthly Total</h3>
+                            </div>
+                            <p id="monthlyTotal" class="text-3xl font-bold text-blue-600"></p>
+                            <p class="text-sm text-blue-600 mt-2">Regular expenses</p>
+                        </div>
+
+                        <!-- Yearly Academic -->
+                        <div
+                            class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 shadow-md cost-card relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-green-200 rounded-bl-full opacity-50"></div>
+                            <div class="flex items-center mb-3">
+                                <i data-feather="book" class="w-5 h-5 text-green-600 mr-2"></i>
+                                <h3 class="text-lg font-semibold text-green-800">Yearly Academic</h3>
+                            </div>
+                            <p id="yearlyAcademic" class="text-3xl font-bold text-green-600"></p>
+                            <p class="text-sm text-green-600 mt-2">Tuition & fees</p>
+                        </div>
+
+                        <!-- Living Expenses -->
+                        <div
+                            class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 shadow-md cost-card relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-purple-200 rounded-bl-full opacity-50">
+                            </div>
+                            <div class="flex items-center mb-3">
+                                <i data-feather="home" class="w-5 h-5 text-purple-600 mr-2"></i>
+                                <h3 class="text-lg font-semibold text-purple-800">Living Expenses</h3>
+                            </div>
+                            <p id="livingExpenses" class="text-3xl font-bold text-purple-600"></p>
+                            <p class="text-sm text-purple-600 mt-2">Annual living costs</p>
+                        </div>
+
+                        <!-- Total Investment -->
+                        <div
+                            class="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-6 shadow-md cost-card relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-indigo-200 rounded-bl-full opacity-50">
+                            </div>
+                            <div class="flex items-center mb-3">
+                                <i data-feather="dollar-sign" class="w-5 h-5 text-indigo-600 mr-2"></i>
+                                <h3 class="text-lg font-semibold text-indigo-800">Total Investment</h3>
+                            </div>
+                            <p id="totalInvestment" class="text-3xl font-bold text-indigo-600"></p>
+                            <p class="text-sm text-indigo-600 mt-2">First year total</p>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Analysis Tabs -->
+                    <div class="bg-white rounded-xl shadow-lg p-8">
+                        <div class="flex space-x-4 border-b mb-6">
+                            <button class="tab-button active px-4 py-2 text-blue-600 border-b-2 border-blue-600"
+                                data-tab="monthly">
+                                <i data-feather="calendar" class="w-4 h-4 inline mr-2"></i>Monthly Breakdown
+                            </button>
+                            <button class="tab-button px-4 py-2 text-gray-600 hover:text-blue-600" data-tab="academic">
+                                <i data-feather="book" class="w-4 h-4 inline mr-2"></i>Academic Costs
+                            </button>
+                            <button class="tab-button px-4 py-2 text-gray-600 hover:text-blue-600" data-tab="setup">
+                                <i data-feather="package" class="w-4 h-4 inline mr-2"></i>Setup & One-time
+                            </button>
+                            <button class="tab-button px-4 py-2 text-gray-600 hover:text-blue-600" data-tab="savings">
+                                <i data-feather="trending-down" class="w-4 h-4 inline mr-2"></i>Savings & Aid
+                            </button>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div id="monthlyTab" class="tab-content active">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <!-- Monthly Distribution Chart -->
+                                <div class="chart-container">
+                                    <canvas id="monthlyDistributionChart"></canvas>
+                                </div>
+                                <!-- Monthly Breakdown List -->
+                                <div id="monthlyBreakdown" class="space-y-4">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Academic Costs Tab -->
+                        <div id="academicTab" class="tab-content hidden">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <!-- Program Costs Chart -->
+                                <div class="bg-white rounded-lg p-6 shadow-md">
+                                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                        <i data-feather="book" class="w-5 h-5 mr-2 text-blue-600"></i>
+                                        Program Costs Comparison
+                                    </h3>
+                                    <div class="chart-container">
+                                        <canvas id="programCostsChart"></canvas>
+                                    </div>
+                                </div>
+
+                                <!-- Mandatory Fees -->
+                                <div class="bg-white rounded-lg p-6 shadow-md">
+                                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                        <i data-feather="clipboard" class="w-5 h-5 mr-2 text-blue-600"></i>
+                                        Mandatory Fees
+                                    </h3>
+                                    <div id="mandatoryFees" class="space-y-4">
+                                        <!-- Populated by JavaScript -->
+                                    </div>
+                                </div>
+
+                                <!-- Materials and Equipment -->
+                                <div class="bg-white rounded-lg p-6 shadow-md">
+                                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                        <i data-feather="package" class="w-5 h-5 mr-2 text-blue-600"></i>
+                                        Materials & Equipment
+                                    </h3>
+                                    <div id="programMaterials" class="space-y-4">
+                                        <!-- Populated by JavaScript -->
+                                    </div>
+                                </div>
+
+                                <!-- Payment Schedule -->
+                                <div class="bg-white rounded-lg p-6 shadow-md">
+                                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                        <i data-feather="calendar" class="w-5 h-5 mr-2 text-blue-600"></i>
+                                        Payment Schedule
+                                    </h3>
+                                    <div id="paymentSchedule" class="space-y-4">
+                                        <!-- Populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Setup Tab Content -->
+                        <div id="setupTab" class="tab-content">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <!-- Visa & Immigration Section -->
+                                <div class="bg-white rounded-lg p-6 shadow-md">
+                                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                        <i class="fas fa-passport mr-2"></i> Visa & Immigration
+                                    </h3>
+                                    <div id="visaCosts" class="space-y-4">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
+                                </div>
+
+                                <!-- Housing Setup Section -->
+                                <div class="bg-white rounded-lg p-6 shadow-md">
+                                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                        <i class="fas fa-home mr-2"></i> Housing Setup
+                                    </h3>
+                                    <div id="housingSetup" class="space-y-4">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
+                                </div>
+
+                                <!-- Expense Timeline Section -->
+                                <div class="col-span-2 bg-white rounded-lg p-6 shadow-md">
+                                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                        <i class="fas fa-clock mr-2"></i> Expense Timeline
+                                    </h3>
+                                    <div id="expenseTimeline" class="relative">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Savings Tab Content -->
+                        <div id="savingsTab" class="tab-content hidden">
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                <!-- Scholarships Section -->
+                                <div class="bg-white rounded-lg p-6 shadow-md">
+                                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                        <i class="fas fa-award mr-2"></i> Available Scholarships
+                                    </h3>
+                                    <div id="scholarships" class="space-y-4">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
+                                </div>
+
+                                <!-- Work Opportunities Section -->
+                                <div class="bg-white rounded-lg p-6 shadow-md">
+                                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                        <i class="fas fa-briefcase mr-2"></i> Work Opportunities
+                                    </h3>
+                                    <div id="workOpportunities" class="space-y-4">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
+                                </div>
+
+                                <!-- Cost Reduction Section -->
+                                <div class="bg-white rounded-lg p-6 shadow-md">
+                                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                                        <i class="fas fa-piggy-bank mr-2"></i> Cost Reduction
+                                    </h3>
+                                    <div id="costReduction" class="space-y-4">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    // Store calculator data globally
+                    let calculatorData = null;
+
+                    // Store chart instances
+                    let charts = {
+                        monthlyDistribution: null,
+                        programCosts: null
+                    };
+
+                    // Initialize when document loads
+                    document.addEventListener('DOMContentLoaded', function () {
+                        // Initialize Feather icons
+                        feather.replace();
+
+                        // Add form submit handler
+                        document.getElementById('costCalculatorForm').addEventListener('submit', handleFormSubmit);
+
+                        // Add tab switching handlers
+                        document.querySelectorAll('.tab-button').forEach(button => {
+                            button.addEventListener('click', () => handleTabSwitch(button));
+                        });
+                    });
+
+                    // Handle form submission
+                    async function handleFormSubmit(e) {
+                        e.preventDefault();
+                        const formData = new FormData(e.target);
+                        const submitButton = e.target.querySelector('button[type="submit"]');
+
+                        // Show loading state
+                        submitButton.disabled = true;
+                        submitButton.innerHTML = `
+        <svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        Calculating...
+    `;
+
+                        try {
+                            const response = await fetch('/calculate-costs', {
+                                method: 'POST',
+                                body: formData
+                            });
+
+                            const data = await response.json();
+                            if (data.error) throw new Error(data.error);
+
+                            // Store data globally
+                            calculatorData = data;
+
+                            // Show results section
+                            const resultsSection = document.getElementById('resultsSection');
+                            resultsSection.classList.remove('hidden');
+                            resultsSection.scrollIntoView({ behavior: 'smooth' });
+
+                            // Update all sections
+                            updateAllSections(data);
+
+                        } catch (error) {
+                            showError(error.message || 'Error calculating costs');
+                        } finally {
+                            // Reset button
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = `
+            <i data-feather="trending-up" class="w-5 h-5 mr-2"></i>
+            Calculate Costs
+        `;
+                            feather.replace();
+                        }
+                    }
+
+                    // Handle tab switching
+                    function handleTabSwitch(button) {
+                        // Update tab buttons
+                        document.querySelectorAll('.tab-button').forEach(b => {
+                            b.classList.remove('active', 'text-blue-600', 'border-b-2', 'border-blue-600');
+                            b.classList.add('text-gray-600');
+                        });
+                        button.classList.remove('text-gray-600');
+                        button.classList.add('active', 'text-blue-600', 'border-b-2', 'border-blue-600');
+
+                        // Update tab content visibility
+                        document.querySelectorAll('.tab-content').forEach(content => {
+                            content.classList.add('hidden');
+                        });
+                        const tabId = button.getAttribute('data-tab') + 'Tab';
+                        document.getElementById(tabId).classList.remove('hidden');
+
+                        // Update content if we have data
+                        if (calculatorData) {
+                            updateTabContent(button.getAttribute('data-tab'));
+                        }
+                    }
+
+                    // Update content for specific tab
+                    function updateTabContent(tabId) {
+                        switch (tabId) {
+                            case 'monthly':
+                                updateMonthlyBreakdown(calculatorData.monthly_costs);
+                                break;
+                            case 'academic':
+                                updateAcademicCosts(calculatorData.yearly_costs);
+                                break;
+                            case 'setup':
+                                updateSetupCosts(calculatorData.one_time_costs);
+                                break;
+                            case 'savings':
+                                updateSavingsInfo(calculatorData.savings_opportunities, calculatorData.financial_aid);
+                                break;
+                        }
+                    }
+
+                    // Update all sections
+                    function updateAllSections(data) {
+                        updateSummaryCards(data.totals);
+                        updateMonthlyBreakdown(data.monthly_costs);
+                        updateAcademicCosts(data.yearly_costs);
+                        updateSetupCosts(data.one_time_costs);
+                        updateSavingsInfo(data.savings_opportunities, data.financial_aid);
+                    }
+
+                    // Update summary cards
+                    function updateSummaryCards(totals) {
+                        document.getElementById('monthlyTotal').textContent = totals.monthly.display_amount;
+                        document.getElementById('yearlyAcademic').textContent = totals.yearly.display_amount;
+                        document.getElementById('livingExpenses').textContent = formatCurrency(totals.monthly.amount * 12);
+                        document.getElementById('totalInvestment').textContent = totals.first_year.display_amount;
+                    }
+
+                    // Update monthly breakdown
+                    function updateMonthlyBreakdown(monthlyData) {
+                        // Update monthly distribution chart
+                        const ctx = document.getElementById('monthlyDistributionChart').getContext('2d');
+
+                        // Destroy existing chart if it exists
+                        if (charts.monthlyDistribution) {
+                            charts.monthlyDistribution.destroy();
+                        }
+
+                        const labels = Object.keys(monthlyData).map(key => formatCategoryName(key));
+                        const amounts = Object.values(monthlyData).map(item => item.amount);
+                        const total = amounts.reduce((a, b) => a + b, 0);
+
+                        charts.monthlyDistribution = new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    data: amounts,
+                                    backgroundColor: [
+                                        'rgba(59, 130, 246, 0.7)',
+                                        'rgba(16, 185, 129, 0.7)',
+                                        'rgba(249, 115, 22, 0.7)',
+                                        'rgba(139, 92, 246, 0.7)',
+                                        'rgba(236, 72, 153, 0.7)'
+                                    ]
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    legend: {
+                                        position: 'right',
+                                        labels: {
+                                            generateLabels: (chart) => {
+                                                return chart.data.labels.map((label, i) => ({
+                                                    text: `${label} (${((chart.data.datasets[0].data[i] / total) * 100).toFixed(1)}%)`,
+                                                    fillStyle: chart.data.datasets[0].backgroundColor[i],
+                                                    hidden: false,
+                                                    index: i
+                                                }));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+
+                        // Update breakdown list
+                        const breakdownContainer = document.getElementById('monthlyBreakdown');
+                        breakdownContainer.innerHTML = Object.entries(monthlyData)
+                            .map(([category, data]) => generateMonthlyBreakdownHTML(category, data))
+                            .join('');
+
+                        feather.replace();
+                    }
+
+                    // Update academic costs
+                    function updateAcademicCosts(yearlyData) {
+                        if (!yearlyData?.tuition?.variations) return;
+
+                        // Update program costs chart
+                        const ctx = document.getElementById('programCostsChart').getContext('2d');
+
+                        if (charts.programCosts) {
+                            charts.programCosts.destroy();
+                        }
+
+                        const programData = yearlyData.tuition.variations;
+
+                        charts.programCosts = new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: programData.map(p => p.program),
+                                datasets: [{
+                                    label: 'Annual Tuition',
+                                    data: programData.map(p => p.amount),
+                                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                                    borderColor: 'rgb(59, 130, 246)',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: {
+                                            callback: value => formatCurrency(value)
+                                        }
+                                    }
+                                }
+                            }
+                        });
+
+                        // Update other academic sections
+                        updateMandatoryFees(yearlyData.academic_fees);
+                        updateMaterials(yearlyData.materials);
+                        updatePaymentSchedule();
+                    }
+
+                    // Update setup costs
+                    function updateSetupCosts(setupData) {
+                        const visaContainer = document.getElementById('visaCosts');
+                        const housingContainer = document.getElementById('housingSetup');
+                        const timelineContainer = document.getElementById('expenseTimeline');
+
+                        if (setupData?.visa) {
+                            visaContainer.innerHTML = generateVisaCostsHTML(setupData.visa);
+                            housingContainer.innerHTML = generateHousingSetupHTML(setupData.setup);
+                            timelineContainer.innerHTML = generateTimelineHTML();
+                        }
+                    }
+
+                    // Update savings and aid information
+                    function updateSavingsInfo(savings, financialAid) {
+                        if (financialAid?.scholarships) {
+                            document.getElementById('scholarships').innerHTML =
+                                generateScholarshipsHTML(financialAid.scholarships);
+                        }
+
+                        if (financialAid?.work_study) {
+                            document.getElementById('workOpportunities').innerHTML =
+                                generateWorkOpportunitiesHTML(financialAid.work_study);
+                        }
+
+                        if (savings) {
+                            document.getElementById('costReduction').innerHTML =
+                                generateSavingsHTML(savings);
+                        }
+                    }
+
+                    // Helper functions
+                    function formatCurrency(amount) {
+                        return new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                        }).format(amount);
+                    }
+
+                    function formatCategoryName(category) {
+                        return category
+                            .split('_')
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(' ');
+                    }
+
+                    function showError(message) {
+                        const alert = document.createElement('div');
+                        alert.className = 'fixed top-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg';
+                        alert.innerHTML = `
+        <div class="flex items-center">
+            <i data-feather="alert-circle" class="w-5 h-5 mr-2"></i>
+            <p>${message}</p>
+        </div>
+    `;
+                        document.body.appendChild(alert);
+                        feather.replace();
+
+                        setTimeout(() => {
+                            alert.remove();
+                        }, 5000);
+                    }
+
+                    // HTML Generator functions for each section
+                    function generateMonthlyBreakdownHTML(category, data) {
+                        return `
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <div class="flex justify-between items-center mb-2">
+                <h4 class="font-medium text-gray-900 capitalize flex items-center">
+                    <i data-feather="${getCategoryIcon(category)}" class="w-4 h-4 mr-2"></i>
+                    ${formatCategoryName(category)}
+                </h4>
+                <span class="text-lg font-bold text-blue-600">${formatCurrency(data.amount)}</span>
+            </div>
+            <p class="text-sm text-gray-600">${data.details}</p>
+            ${generateBreakdownHTML(data.breakdown)}
+            ${generateOptionsHTML(data.options)}
+        </div>
+    `;
+                    }
+
+                    // Category icon mapping
+                    function getCategoryIcon(category) {
+                        const icons = {
+                            accommodation: 'home',
+                            food: 'coffee',
+                            transport: 'map',
+                            utilities: 'zap',
+                            personal: 'user',
+                            study: 'book',
+                            entertainment: 'music',
+                            health: 'heart',
+                            default: 'circle'
+                        };
+                        return icons[category] || icons.default;
+                    }
+
+                    // Generate breakdown section HTML
+                    function generateBreakdownHTML(breakdown) {
+                        if (!breakdown) return '';
+
+                        return `
+        <div class="mt-2 pt-2 border-t border-gray-200">
+            <p class="text-xs font-medium text-gray-500 mb-1">Breakdown:</p>
+            <div class="grid grid-cols-2 gap-2">
+                ${Object.entries(breakdown)
+                                .map(([item, cost]) => `
+                        <div class="flex justify-between">
+                            <span class="text-xs text-gray-600">${formatCategoryName(item)}</span>
+                            <span class="text-xs font-medium">${formatCurrency(cost)}</span>
+                        </div>
+                    `).join('')}
+            </div>
+        </div>
+    `;
+                    }
+
+                    // Generate options section HTML
+                    function generateOptionsHTML(options) {
+                        if (!options) return '';
+
+                        return `
+        <div class="mt-2 pt-2 border-t border-gray-200">
+            <p class="text-xs font-medium text-gray-500 mb-1">Available Options:</p>
+            <div class="space-y-1">
+                ${options.map(option => `
+                    <div class="flex justify-between">
+                        <span class="text-xs text-gray-600">${option.type}</span>
+                        <span class="text-xs font-medium">${formatCurrency(option.cost)}</span>
+                    </div>
+                    ${option.notes ? `<p class="text-xs text-gray-500">${option.notes}</p>` : ''}
+                `).join('')}
+            </div>
+        </div>
+    `;
+                    }
+
+                    // Generate mandatory fees HTML
+                    function updateMandatoryFees(fees) {
+                        const container = document.getElementById('mandatoryFees');
+                        if (!fees?.breakdown) {
+                            container.innerHTML = '<p class="text-gray-500">No mandatory fees information available</p>';
+                            return;
+                        }
+
+                        container.innerHTML = Object.entries(fees.breakdown)
+                            .map(([fee, amount]) => `
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex justify-between items-center">
+                    <span class="font-medium">${formatCategoryName(fee)}</span>
+                    <span class="text-blue-600 font-bold">${formatCurrency(amount)}</span>
+                </div>
+                <p class="text-sm text-gray-600 mt-1">Per academic year</p>
+            </div>
+        `).join('');
+                    }
+
+                    // Generate materials section HTML
+                    function updateMaterials(materials) {
+                        const container = document.getElementById('programMaterials');
+                        container.innerHTML = `
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <h4 class="font-medium mb-2">Estimated Course Materials</h4>
+            <div class="flex justify-between items-center">
+                <span>Books and Supplies</span>
+                <span class="text-blue-600 font-bold">${formatCurrency(materials?.amount || 0)}</span>
+            </div>
+        </div>
+    `;
+                    }
+
+                    // Generate payment schedule HTML
+                    function updatePaymentSchedule() {
+                        const container = document.getElementById('paymentSchedule');
+                        container.innerHTML = `
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <h4 class="font-medium mb-2">Payment Deadlines</h4>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <span>Fall Semester</span>
+                    <span class="text-blue-600">August 1st</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span>Spring Semester</span>
+                    <span class="text-blue-600">December 1st</span>
+                </div>
+            </div>
+        </div>
+    `;
+                    }
+
+                    // Generate visa costs HTML
+                    function generateVisaCostsHTML(visa) {
+                        return `
+        <div class="space-y-4">
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-medium">Visa Application</span>
+                    <span class="text-blue-600 font-bold">${formatCurrency(visa.amount)}</span>
+                </div>
+                <p class="text-sm text-gray-600">${visa.details}</p>
+                ${visa.additional_fees ? `
+                    <div class="mt-3 space-y-2 border-t pt-2">
+                        <p class="text-xs font-medium text-gray-500">Additional Fees:</p>
+                        ${visa.additional_fees.map(fee => `
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">${fee.type}</span>
+                                <span class="font-medium">${formatCurrency(fee.cost)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+                    }
+
+                    // Generate housing setup HTML
+                    function generateHousingSetupHTML(setup) {
+                        return `
+        <div class="space-y-4">
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-medium">Initial Setup</span>
+                    <span class="text-blue-600 font-bold">${formatCurrency(setup.amount)}</span>
+                </div>
+                <p class="text-sm text-gray-600">${setup.details}</p>
+                ${setup.breakdown ? `
+                    <div class="mt-3 space-y-2 border-t pt-2">
+                        <p class="text-xs font-medium text-gray-500">Cost Breakdown:</p>
+                        ${Object.entries(setup.breakdown).map(([item, cost]) => `
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">${formatCategoryName(item)}</span>
+                                <span class="font-medium">${formatCurrency(cost)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+                    }
+
+                    // Generate timeline HTML
+                    function generateTimelineHTML() {
+                        return `
+        <div class="relative">
+            <div class="absolute left-0 w-1 bg-blue-200 h-full"></div>
+            <div class="space-y-8 pl-6">
+                <div class="relative">
+                    <div class="absolute -left-[1.65rem] bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-white">1</div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-lg mb-2">6-8 months before</h4>
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li>• Submit university applications</li>
+                            <li>• Prepare documents for visa</li>
+                            <li>• Research accommodation options</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="relative">
+                    <div class="absolute -left-[1.65rem] bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-white">2</div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-lg mb-2">3-4 months before</h4>
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li>• Apply for visa</li>
+                            <li>• Book accommodation</li>
+                            <li>• Arrange health insurance</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="relative">
+                    <div class="absolute -left-[1.65rem] bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-white">3</div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-medium text-lg mb-2">1-2 months before</h4>
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li>• Book travel tickets</li>
+                            <li>• Pay initial deposits</li>
+                            <li>• Purchase essentials</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+                    }
+
+                    // Generate scholarships HTML
+                    function generateScholarshipsHTML(scholarships) {
+                        return `
+        <div class="space-y-4">
+            ${scholarships.map(scholarship => `
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-medium">${scholarship.type}</span>
+                        <span class="text-blue-600 font-bold">${scholarship.amount}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-2">${scholarship.eligibility}</p>
+                    <div class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded inline-block">
+                        Deadline: ${scholarship.deadline || 'Rolling'}
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+                    }
+
+                    // Generate work opportunities HTML
+                    function generateWorkOpportunitiesHTML(workStudy) {
+                        return `
+        <div class="space-y-4">
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="font-medium mb-3">Student Work Options</h4>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Working Hours</span>
+                        <span class="font-medium">${workStudy.hours_per_week}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Typical Pay Rate</span>
+                        <span class="font-medium">${workStudy.typical_wage}/hr</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <p class="text-sm text-blue-700">
+                    <i data-feather="info" class="w-4 h-4 inline mr-1"></i>
+                    International students can typically work up to 20 hours/week during semester
+                </p>
+            </div>
+        </div>
+    `;
+                    }
+
+                    // Generate savings HTML
+                    function generateSavingsHTML(savings) {
+                        return `
+        <div class="space-y-4">
+            ${savings.map(opportunity => `
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-medium">${opportunity.category}</span>
+                        <span class="text-blue-600 font-bold">Save ${opportunity.potential_saving}</span>
+                    </div>
+                    <p class="text-sm text-gray-600">${opportunity.strategy}</p>
+                </div>
+            `).join('')}
+            <div class="bg-green-50 p-4 rounded-lg">
+                <p class="text-sm text-green-700">
+                    <i data-feather="trending-down" class="w-4 h-4 inline mr-1"></i>
+                    Implementing these strategies could reduce your total costs by 20-30%
+                </p>
+            </div>
+        </div>
+    `;
+                    }
+
+                    // Initialize the calculator when the page loads
+                    document.addEventListener('DOMContentLoaded', () => {
+                        // Set initial active tab
+                        const defaultTab = document.querySelector('[data-tab="monthly"]');
+                        if (defaultTab) {
+                            handleTabSwitch(defaultTab);
+                        }
+                    });
+                </script>
+</body>
