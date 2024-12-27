@@ -15,7 +15,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import json
 import os
-
+from flask_babel import Babel, gettext
 # Initialize Firebase Admin SDK
 try:
     # Initialize Firebase Admin SDK if not already initialized
@@ -579,6 +579,7 @@ class UniversityRecommender:
         except Exception as e:
             self.logger.error(f"Error in career guidance: {str(e)}")
             return "Error generating question", ""
+
 # Initialize Flask application
 app = Flask(__name__)
 app.secret_key = "dev_secret_key_123"
@@ -596,7 +597,13 @@ response_formatter = ResponseFormatter()
 #             return redirect(url_for('login', next=request.url))
 #         return f(*args, **kwargs)
 #     return decorated_function
+from flask import redirect, request
 
+@app.route('/set-language/<language>')
+def set_language(language):
+    if language in ['en', 'ru', 'kk']:
+        session['language'] = language
+    return redirect(request.referrer or '/')
 @app.route('/login')
 def login():
     # Если пользователь уже аутентифицирован, перенаправляем на главную
@@ -702,7 +709,8 @@ def unichooser():
             return render_template(
                 "index.html", 
                 recommendations=recommendations,
-                country=form_data['country']
+                country=form_data['country'],
+                
             )
             
         except Exception as e:
@@ -1495,6 +1503,8 @@ def export_cost_report():
     except Exception as e:
         app.logger.error(f"Error generating cost report: {str(e)}")
         return jsonify({"error": "Failed to generate cost report"}), 500
+
+
 
 if __name__ == "__main__":
     # Load environment variables

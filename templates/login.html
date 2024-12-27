@@ -10,10 +10,31 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            /* Жирное начертание для заголовков */
+        }
+
+        p {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 400;
+            /* Обычное начертание для текста */
+            font-size: 16px;
         }
     </style>
 </head>
@@ -25,10 +46,49 @@
             <div class="flex justify-between h-20">
                 <div class="flex items-center">
                     <a href="/" class="flex items-center space-x-3">
-                        <svg class="h-10 w-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 14l9-5-9-5-9 5 9 5z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14v7" />
+                        <svg class="h-12 w-12" viewBox="0 0 4000 2557" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M3529.33 1803.34L3537.51 1104.03C3537.59 1096.53 3541.18 1089.51 3547.2 1085.04L3558.73 1076.48C3574.56 1064.73 3597.03 1076.03 3597.03 1095.75L3597.03 1803.59C3597.03 1812.2 3601.71 1820.08 3608.97 1824.71C3708.08 1887.91 3663.29 1952.43 3615.65 1986.2C3605.5 1993.4 3600.87 2006.6 3605.87 2018L3726.49 2292.84C3733.45 2308.7 3721.83 2326.48 3704.51 2326.48L3421.68 2326.48C3404.36 2326.48 3392.75 2308.7 3399.71 2292.84L3520.75 2017.02C3525.57 2006.04 3521.36 1993.25 3511.64 1986.22C3419 1919.24 3469.61 1855.25 3516.98 1824.7C3524.32 1819.96 3529.23 1812.08 3529.33 1803.34Z"
+                                fill="url(#paint0_linear_15_13)" />
+                            <path
+                                d="M1946.61 1889.69L893.722 1413.27C873.63 1404.17 850.536 1418.2 848.764 1440.18C786.053 2218.04 930.785 2265.52 1026.51 2328.44C1124.07 2392.56 1692.47 2552.86 1959.7 2556.87C2226.94 2560.88 2557.79 2456.68 2858.96 2328.44C3087.35 2231.18 3107.63 1720.51 3087.44 1438.88C3085.88 1417.05 3063.08 1403.88 3043.09 1412.79L1972.83 1889.76C1964.48 1893.48 1954.94 1893.46 1946.61 1889.69Z"
+                                fill="url(#paint1_linear_15_13)" />
+                            <path
+                                d="M1963.94 1799.43L79.5355 945.764C48.3548 931.639 48.1683 887.421 79.2287 873.033L1963.94 0C1967.23 1.49378 1970.51 2.98772 1973.78 4.48182C2047.21 37.7283 2510.53 245.231 3916.47 872.467C3928.05 877.634 3935.49 886.971 3938.72 897.423C3944.34 915.61 3937.21 937.171 3916.99 946.008L1963.94 1799.43Z"
+                                fill="url(#paint2_linear_15_13)" />
+                            <path
+                                d="M1472.65 1125.48C1535.73 1165.12 1628.04 1188.39 1729.37 1190.21C1830.71 1192.03 1932.82 1172.24 2013.35 1135.19L2766.59 787.812C2792.85 775.449 2824.69 767.165 2858.17 763.991C2898.14 760.504 2938.45 762.804 2964.95 779.19L2965.85 779.762C2991.2 795.792 2991.22 816.469 2981.68 836.413C2971.7 855.779 2950.33 873.423 2920.83 886.646L2168.74 1233.49C2035.33 1294.88 1866.12 1327.62 1698.25 1324.51C1530.38 1321.4 1377.57 1282.7 1273.34 1216.9C1259.94 1208.35 1251.24 1197.89 1248.06 1186.55C1244.89 1175.2 1247.35 1163.36 1255.21 1152.15C1263.07 1140.94 1276.07 1130.75 1292.94 1122.57C1309.81 1114.38 1330 1108.47 1351.54 1105.41C1374.25 1102.17 1397.65 1102.34 1419.06 1105.89C1440.48 1109.44 1459.05 1116.23 1472.65 1125.48Z"
+                                fill="url(#paint3_linear_15_13)" />
+                            <path
+                                d="M1474.09 1126.37C1411.5 1086.51 1383.41 1033.63 1395.97 979.286C1408.52 924.945 1460.7 873.58 1541.09 836.431L2294.32 489.064C2321.04 476.995 2341.18 461.306 2352.23 443.946C2364.87 423.17 2366.98 401.311 2341.17 384.606L2340.27 384.033C2314.92 368.004 2277.12 364.749 2239.16 366.716C2202.18 369.003 2166.57 377.639 2137.77 391.301L1385.69 738.134C1252.52 799.681 1166.14 884.812 1145.52 974.844C1124.9 1064.88 1171.71 1152.46 1275.69 1218.37C1289.24 1226.85 1307 1233.13 1327.24 1236.6C1347.49 1240.08 1369.53 1240.62 1391.26 1238.18C1412.98 1235.74 1433.65 1230.41 1451.27 1222.69C1468.88 1214.97 1482.85 1205.13 1491.82 1194.12C1501.29 1182.51 1504.65 1170.01 1501.52 1158.03C1498.38 1146.05 1488.88 1135.08 1474.09 1126.37Z"
+                                fill="url(#paint4_linear_15_13)" />
+                            <defs>
+                                <linearGradient id="paint0_linear_15_13" x1="3563.1" y1="1048.05" x2="3563.1"
+                                    y2="2326.48" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#537EDD" />
+                                    <stop offset="1" stop-color="#0050FF" />
+                                </linearGradient>
+                                <linearGradient id="paint1_linear_15_13" x1="1963.47" y1="1394.66" x2="1963.47"
+                                    y2="2556.98" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#537EDD" />
+                                    <stop offset="1" stop-color="#0050FF" />
+                                </linearGradient>
+                                <linearGradient id="paint2_linear_15_13" x1="2000" y1="0" x2="2000" y2="1799.43"
+                                    gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#537EDD" />
+                                    <stop offset="1" stop-color="#0050FF" />
+                                </linearGradient>
+                                <linearGradient id="paint3_linear_15_13" x1="2809.24" y1="680.693" x2="2128.04"
+                                    y2="1757.57" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="white" />
+                                    <stop offset="1" stop-color="#4976DA" />
+                                </linearGradient>
+                                <linearGradient id="paint4_linear_15_13" x1="2496.88" y1="483.1" x2="1815.69"
+                                    y2="1559.95" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="white" />
+                                    <stop offset="1" stop-color="#4976DA" />
+                                </linearGradient>
+                            </defs>
                         </svg>
                         <span
                             class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">UNIVI
@@ -133,7 +193,7 @@
                     document.cookie = `auth_token=${idToken}; path=/; max-age=3600; SameSite=Strict`;
 
                     // Перенаправляем на страницу пользователя
-                    window.location.href = '/user';
+                    window.location.href = '/';
                 }
             } catch (error) {
                 errorDisplay.textContent = error.message;

@@ -2,6 +2,34 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <!-- Place this in your head section -->
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+    body {
+        font-family: 'Montserrat', sans-serif;
+        margin: 0;
+        padding: 0;
+        line-height: 1.6;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 700;
+        /* Жирное начертание для заголовков */
+    }
+
+    p {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 400;
+        /* Обычное начертание для текста */
+        font-size: 16px;
+    }
+</style>
 <!-- Add this in your head section -->
 <script>
     // Make db and auth globally available
@@ -221,5 +249,162 @@
                 showError('Error loading user data: ' + error.message);
             }
         });
+    });
+    // Firebase Auth Cookie Management
+    const FirebaseAuthCookies = {
+        // Set authentication cookie
+        setAuthCookie: async (user) => {
+            try {
+                // Get the ID token
+                const idToken = await user.getIdToken();
+
+                // Set the cookie with the token and longer expiration (7 days)
+                document.cookie = `auth_token=${idToken}; path=/; max-age=604800; secure; samesite=Strict`;
+
+                // Store user info with same expiration
+                const userInfo = {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName
+                };
+                document.cookie = `user_info=${JSON.stringify(userInfo)}; path=/; max-age=604800; secure; samesite=Strict`;
+
+                // Set a flag to indicate authenticated state
+                localStorage.setItem('isAuthenticated', 'true');
+            } catch (error) {
+                console.error('Error setting auth cookie:', error);
+            }
+        },
+
+        // Clear authentication cookies
+        clearAuthCookies: () => {
+            document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+            document.cookie = 'user_info=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+            localStorage.removeItem('isAuthenticated');
+        },
+
+        // Check if user is authenticated
+        checkAuthState: () => {
+            const cookies = document.cookie.split(';');
+            const authToken = cookies.find(cookie => cookie.trim().startsWith('auth_token='));
+            return !!authToken;
+        },
+
+        // Refresh auth token periodically
+        startTokenRefreshTimer: (user) => {
+            // Clear any existing refresh timers
+            if (window.tokenRefreshTimer) {
+                clearInterval(window.tokenRefreshTimer);
+            }
+
+            // Refresh token every 50 minutes (before the 1-hour expiration)
+            window.tokenRefreshTimer = setInterval(async () => {
+                try {
+                    if (user) {
+                        await FirebaseAuthCookies.setAuthCookie(user);
+                    }
+                } catch (error) {
+                    console.error('Error refreshing token:', error);
+                }
+            }, 50 * 60 * 1000); // 50 minutes
+        }
+    };
+
+    // Prevent flash of unauthorized content
+    document.addEventListener('DOMContentLoaded', () => {
+        if (FirebaseAuthCookies.checkAuthState()) {
+            // Hide login/register buttons immediately if auth token exists
+            ['desktop', 'mobile'].forEach(type => {
+                const elements = {
+                    login: document.getElementById(`${type}LoginBtn`),
+                    register: document.getElementById(`${type}RegisterBtn`)
+                };
+
+                if (elements.login) elements.login.classList.add('hidden');
+                if (elements.register) elements.register.classList.add('hidden');
+            });
+        }
+    });
+
+    // Set up Firebase Auth state observer
+    firebase.auth().onAuthStateChanged((user) => {
+        const authElements = {
+            desktop: {
+                profile: document.getElementById('userProfileBtn'),
+                login: document.getElementById('loginBtn'),
+                register: document.getElementById('registerBtn'),
+                logout: document.getElementById('logoutBtn')
+            },
+            mobile: {
+                profile: document.getElementById('mobileUserProfileBtn'),
+                login: document.getElementById('mobileLoginBtn'),
+                register: document.getElementById('mobileRegisterBtn'),
+                logout: document.getElementById('mobileLogoutBtn')
+            }
+        };
+
+        if (user) {
+            // User is signed in
+            FirebaseAuthCookies.setAuthCookie(user);
+            FirebaseAuthCookies.startTokenRefreshTimer(user);
+
+            // Update UI elements
+            ['desktop', 'mobile'].forEach(type => {
+                authElements[type].profile?.classList.remove('hidden');
+                authElements[type].logout?.classList.remove('hidden');
+                authElements[type].login?.classList.add('hidden');
+                authElements[type].register?.classList.add('hidden');
+            });
+
+            // Update profile name
+            const navUserName = document.getElementById('navUserName');
+            if (navUserName) {
+                db.collection('users').doc(user.uid).get().then((doc) => {
+                    if (doc.exists) {
+                        navUserName.textContent = doc.data().name || 'User';
+                    }
+                });
+            }
+        } else {
+            // Only clear auth if we weren't previously authenticated
+            if (localStorage.getItem('isAuthenticated')) {
+                FirebaseAuthCookies.clearAuthCookies();
+            }
+
+            // Update UI elements
+            ['desktop', 'mobile'].forEach(type => {
+                authElements[type].profile?.classList.add('hidden');
+                authElements[type].logout?.classList.add('hidden');
+                authElements[type].login?.classList.remove('hidden');
+                authElements[type].register?.classList.remove('hidden');
+            });
+        }
+    });
+
+    // Handle logout
+    function handleLogout() {
+        FirebaseAuthCookies.clearAuthCookies();
+        firebase.auth().signOut().then(() => {
+            window.location.href = '/advisor';
+        }).catch((error) => {
+            console.error('Error signing out:', error);
+        });
+    }
+
+    // Add logout handlers
+    document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
+    document.getElementById('mobileLogoutBtn')?.addEventListener('click', handleLogout);
+
+    // Persist auth state across page loads
+    window.addEventListener('load', () => {
+        if (localStorage.getItem('isAuthenticated')) {
+            // If we were authenticated, maintain the UI state until Firebase auth check completes
+            ['desktop', 'mobile'].forEach(type => {
+                const login = document.getElementById(`${type}LoginBtn`);
+                const register = document.getElementById(`${type}RegisterBtn`);
+                if (login) login.classList.add('hidden');
+                if (register) register.classList.add('hidden');
+            });
+        }
     });
 </script>
